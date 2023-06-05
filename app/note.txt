@@ -1,0 +1,31 @@
+Mahasiswa Repository Create Manual
+# def create(table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaAlamat, table_tiga: schemas.MahasiswaOrtu, table_empat: schemas.MahasiswaTransfer, db: Session):
+#     try:
+#         new_mhs_satu = models.Mahasiswa(nim =  table_satu.nim, nik = table_satu.nik, nisn = table_satu.nisn, nama = table_satu.nama, tempat_lahir = table_satu.tempat_lahir, tgl_lahir = table_satu.tgl_lahir, jenis_kelamin = table_satu.jenis_kelamin, agama = table_satu.agama, kewarganegaraan = table_satu.kewarganegaraan, sekolah_asal = table_satu.sekolah_asal, id_prodi = table_satu.id_prodi, status_awal = table_satu. status_awal, status_aktif  = table_satu.status_aktif, angkatan = table_satu.angkatan, kelas = table_satu.kelas, no_hp = table_satu.no_hp, no_tlp = table_satu.no_tlp, email = table_satu.email, jenis_tinggal = table_satu.jenis_tinggal, npwp = table_satu.npwp, alat_transportasi = table_satu.alat_transportasi, nomor_kps = table_satu.nomor_kps, penerima_kps = table_satu.penerima_kps, kebutuhan_khusus = table_satu.kebutuhan_khusus, bidang_minat = table_satu.bidang_minat)
+#         db.add(new_mhs_satu)
+#         db.flush()
+
+#         new_mhs_dua = models.MahasiswaAlamat(id_mahasiswa = new_mhs_satu.id_mahasiswa, alamat_rmh = table_dua.alamat_rmh, provinsi = table_dua.provinsi, kab_kota = table_dua.kab_kota, kecamatan = table_dua.kecamatan, kelurahan = table_dua.kelurahan, dusun = table_dua.dusun, rt = table_dua.rt, rw = table_dua.rw, kode_pos = table_dua.kode_pos)
+#         db.add(new_mhs_dua)
+#         db.flush()
+
+#         new_mhs_tiga = models.MahasiswaOrtu(id_mahasiswa = new_mhs_satu.id_mahasiswa, status_hubungan = table_tiga.status_hubungan, nik = table_tiga.nik, nama_ortu = table_tiga.nama_ortu, no_hp_ortu = table_tiga.no_hp_ortu, tgl_lahir_ortu = table_tiga.tgl_lahir_ortu, pendidikan = table_tiga.pendidikan, pekerjaan = table_tiga.pekerjaan, penghasilan = table_tiga.penghasilan, kebutuhan_khusus_ortu = table_tiga.kebutuhan_khusus_ortu)
+#         db.add(new_mhs_tiga)
+#         db.flush()
+
+#         new_mhs_empat = models.MahasiswaTransfer(id_mahasiswa = new_mhs_satu.id_mahasiswa, kampus_asal = table_empat.kampus_asal, nim_asal = table_empat.nim_asal, ipk_lama = table_empat.ipk_lama)
+#         db.add(new_mhs_empat)
+#         db.commit()
+
+#         return {"message": "Data Berhasil disimpan"}
+    
+#     except Exception as e:
+#         db.rollback()
+#         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = str(e))
+
+Mahasiswa Repository Get All Manual
+    # mahasiswa_data = db.query(models.Mahasiswa).all()
+    # mahasiswa_alamat_data = db.query(models.MahasiswaAlamat).all()
+    # mahasiswa_ortu_data = db.query(models.MahasiswaOrtu).all()
+    # mahasiswa_transfer_data = db.query(models.MahasiswaTransfer).all()
+    # return {"mahasiswa": mahasiswa_data, "mahasiswa_alamat": mahasiswa_alamat_data, "mahasiswa_ortu": mahasiswa_ortu_data, "mahasiswa_transfer": mahasiswa_transfer_data}
