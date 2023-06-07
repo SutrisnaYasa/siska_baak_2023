@@ -3,6 +3,7 @@ cd /opt/lampp
 sudo ./manager-linux-x64.run
 
 #Untuk menjalankan requirements yang akan diinstall
+cd app
 pip3 install -r requirements.txt 
 
 # Contoh Install Manual / satu per satu

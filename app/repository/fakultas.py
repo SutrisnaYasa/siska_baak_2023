@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 import models, schemas
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
+import json
 
 # def get_all(db: Session) -> Dict[str, any]:
 #     response = {"status": False, "message": "", "data": []}
@@ -52,12 +53,17 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
     fakultas = db.query(models.Fakultas).filter(models.Fakultas.id_fakultas == id)
     if not fakultas.first():
-        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = f"Fakultas dengan id {id} tidak ditemukan")
+        response["message"] = f"Data Fakultas dengan id {id} tidak ditemukan"
+        content = json.dumps(response)
+        return Response(content = content, media_type = "application/json", status_code = status.HTTP_404_NOT_FOUND, headers = {"X-Error": "Data Fakultas tidak ditemukan"})
     try:
         fakultas.delete(synchronize_session = False)
         db.commit()
         response["status"] = True
-        response["message"] = "Data Fakultas Berhasil di Hapus"
+        # response["message"] = "Data Fakultas Berhasil di Hapus"
+        response["message"] = f"Data Fakultas Berhasil di Hapus"
+        content = json.dumps(response)
+        return Response(content = content, media_type = "application/json", status_code = status.HTTP_204_NO_CONTENT, headers = {"X-Error": "Data Fakultas Berhasil di Hapus"})
     except Exception as e:
         response["message"] = str(e)
     return response
@@ -67,8 +73,9 @@ def update(id: int, request: schemas.Fakultas, db: Session) -> Dict[str, Union[b
 
     fakultas = db.query(models.Fakultas).filter(models.Fakultas.id_fakultas == id)
     if not fakultas.first():
-        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = f"Fakultas dengan id {id} tidak ditemukan")
-    
+        response["message"] = f"Data Fakultas dengan id {id} tidak ditemukan"
+        content = json.dumps(response)
+        return Response(content=content, media_type="application/json", status_code = status.HTTP_404_NOT_FOUND, headers = {"X-Error": "Data Fakultas tidak ditemukan"})
     try:
         fakultas.update(request.dict())
         db.commit()
@@ -86,7 +93,9 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowFakulta
 
     fakultas = db.query(models.Fakultas).filter(models.Fakultas.id_fakultas == id).first()
     if not fakultas:
-        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = f"Fakultas dengan id {id} tidak ditemukan")
+        response["message"] = f"Data Fakultas dengan id {id} tidak ditemukan"
+        content = json.dumps(response)
+        return Response(content=content, media_type="application/json", status_code = status.HTTP_404_NOT_FOUND, headers = {"X-Error": "Data Fakultas tidak ditemukan"})
     try:
         response["status"] = True
         response["message"] = "Data Fakultas Berhasil Ditemukan"
