@@ -1,5 +1,5 @@
 from typing import List, Dict, Union
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status
 import schemas, database, models
 from sqlalchemy.orm import Session
 from repository import fakultas
