@@ -33,6 +33,7 @@ class Fakultas(Base):
 class Prodi(Base):
     __tablename__ = 'prodi'
     id_prodi = Column(Integer, primary_key = True, index = True)
+    kode_prodi = Column(String(100))
     nama_prodi = Column(String(100))
     id_fakultas = Column(Integer, ForeignKey('fakultas.id_fakultas', ondelete="CASCADE", onupdate="CASCADE"))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
@@ -166,6 +167,7 @@ class MahasiswaTransfer(Base):
 class Dosen(Base):
     __tablename__ = 'dosen'
     id_dosen = Column(Integer, primary_key = True, index = True)
+    kode_dosen = Column(String(100))
     nidk = Column(String(100))
     nidn = Column(String(100))
     npwp = Column(String(100))

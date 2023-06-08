@@ -72,10 +72,11 @@ class ShowFakultas(BaseModel):
 
 # Schemas Master Prodi
 class ProdiBase(BaseModel):
+    kode_prodi: str
     nama_prodi: str
     id_fakultas: int
 
-    @validator('nama_prodi', 'id_fakultas')
+    @validator('kode_prodi', 'nama_prodi', 'id_fakultas')
     def check_not_null(cls, value):
         if value is None or value == "":
             raise ValueError('Field tidak boleh kosong')
@@ -87,6 +88,7 @@ class Prodi(ProdiBase):
 
 class ShowProdi(BaseModel):
     id_prodi: int
+    kode_prodi: str
     nama_prodi: str
     prodis: ShowFakultas
 
@@ -334,6 +336,7 @@ class ShowMahasiswaAll(BaseModel):
 
 # Shcemas Dosen
 class DosenBase(BaseModel):
+    kode_dosen: str
     nidk: str
     nidn: str
     npwp: str
@@ -357,7 +360,7 @@ class DosenBase(BaseModel):
     tgl_sk_nidn: date
     sumber_gaji: str
 
-    @validator('nidk', 'nidn', 'npwp', 'nama', 'jenis_kelamin', 'no_hp', 'email', 'id_prodi', 'tempat_lahir', 'tgl_lahir', 'agama', 'nama_ibu_kandung', 'status_kedosenan', 'status_aktif', 'status_perkawinan', 'hubungan_pasangan', 'nik_pasangan', 'pekerjaan_pasangan', 'no_sk_pengangkatan_dosen', 'tgl_sk_nidn', 'sumber_gaji')
+    @validator('kode_dosen', 'nidk', 'nidn', 'npwp', 'nama', 'jenis_kelamin', 'no_hp', 'email', 'id_prodi', 'tempat_lahir', 'tgl_lahir', 'agama', 'nama_ibu_kandung', 'status_kedosenan', 'status_aktif', 'status_perkawinan', 'hubungan_pasangan', 'nik_pasangan', 'pekerjaan_pasangan', 'no_sk_pengangkatan_dosen', 'tgl_sk_nidn', 'sumber_gaji')
     def check_not_null(cls, value):
         if value is None or value == "":
             raise ValueError('Field tidak boleh kosong')
@@ -368,6 +371,7 @@ class Dosen(DosenBase):
         orm_mode = True
 
 class ShowDosen(BaseModel):
+    kode_dosen: str
     nidk: str
     nidn: str
     npwp: str

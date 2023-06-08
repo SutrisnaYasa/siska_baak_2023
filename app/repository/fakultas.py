@@ -37,7 +37,7 @@ def create(request: schemas.Fakultas, db: Session) -> Dict[str, Union[bool, str,
     response = {"status": False, "msg": "", "data": None}
     try:
         if db.query(exists().where(models.Fakultas.kode_fakultas == request.kode_fakultas)).scalar():
-            response["msg"] = "Kode Fakultas already exists"
+            response["msg"] = "Kode Fakultas Sudah Ada"
             content = json.dumps({"detail":[response]})
             return Response(content = content, media_type = "application/json", status_code = status.HTTP_409_CONFLICT, headers = {"X-Error": "Data Conflict"})
         else:
@@ -84,7 +84,7 @@ def update(id: int, request: schemas.Fakultas, db: Session) -> Dict[str, Union[b
     try:
         existing_fakultas = db.query(models.Fakultas).filter(models.Fakultas.kode_fakultas == request.kode_fakultas).first()
         if existing_fakultas and existing_fakultas.id_fakultas != id:
-            response["msg"] = "Kode Fakultas already exists"
+            response["msg"] = "Kode Fakultas Sudah Ada"
             content = json.dumps({"detail":[response]})
             return Response(content = content, media_type = "application/json", status_code = status.HTTP_409_CONFLICT, headers = {"X-Error": "Data Conflict"})
         fakultas.update(request.dict())
