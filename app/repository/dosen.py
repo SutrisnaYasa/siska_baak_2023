@@ -74,7 +74,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga: schemas.DosenRiwayatStudi, table_empat: schemas.DosenJabfung, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "message": ""}
-    dosen = db.query(models.Dosen, models.DosenAlamat, models.DosenRiwayatStudi, models.DosenJabfung).\
+    dosen = db.query(models.Dosen).\
     filter(models.Dosen.id_dosen == id).\
     all()
     if not dosen:
