@@ -45,18 +45,16 @@ class FakultasBase(BaseModel):
     kode_fakultas: str
     nama_fakultas: str
 
-    @validator('kode_fakultas')
+    @validator('kode_fakultas','nama_fakultas')
     def check_not_null(cls, value):
         if value is None or value == "":
             raise ValueError('Field tidak boleh kosong')
-        elif re.search(r'\s', value):
-            raise ValueError('Kode Fakultas tidak boleh mengandung spasi')
         return value
-    
-    @validator('nama_fakultas')
-    def check_nama_fakultas(cls, value):
-        if value is None or value == "":
-            raise ValueError('Field tidak boleh kosong')
+
+    @validator('kode_fakultas')
+    def check_spasi(cls, value):
+        if re.search(r'\s', value):
+            raise ValueError('Kode Fakultas tidak boleh mengandung spasi')
         return value
 
 class Fakultas(FakultasBase):
