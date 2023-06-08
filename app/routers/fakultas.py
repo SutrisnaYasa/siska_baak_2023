@@ -10,6 +10,7 @@ router = APIRouter(
 )
 get_db = database.get_db
 
+
 # @router.get('/', response_model = Dict[str, Union[bool, str, List[schemas.ShowFakultas]]], status_code = status.HTTP_200_OK)
 # def all(db: Session = Depends(get_db)):
 #     result = fakultas.get_all(db)
