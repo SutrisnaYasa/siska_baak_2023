@@ -67,8 +67,6 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         db.commit()
         response["status"] = True
         response["msg"] = f"Data Fakultas Berhasil di Hapus"
-        content = json.dumps({"detail":[response]})
-        return Response(content = content, media_type = "application/json", status_code = status.HTTP_204_NO_CONTENT, headers = {"X-Error": "Data Fakultas Berhasil di Hapus"})
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
