@@ -82,6 +82,12 @@ class ProdiBase(BaseModel):
             raise ValueError('Field tidak boleh kosong')
         return value
     
+    @validator('kode_prodi')
+    def check_spasi(cls, value):
+        if re.search(r'\s', value):
+            raise ValueError('Kode Prodi tidak boleh mengandung spasi')
+        return value
+    
 class Prodi(ProdiBase):
     class Config():
         orm_mode = True
