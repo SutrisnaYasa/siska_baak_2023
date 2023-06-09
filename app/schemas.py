@@ -188,6 +188,12 @@ class MahasiswaBase(BaseModel):
             raise ValueError('Field tidak boleh kosong')
         return value
 
+    @validator('nim')
+    def check_spasi(cls, value):
+        if re.search(r'\s', value):
+            raise ValueError('Field tidak boleh mengandung spasi')
+        return value
+
 class Mahasiswa(MahasiswaBase):
     class Config:
         orm_mode = True
