@@ -377,6 +377,12 @@ class DosenBase(BaseModel):
         if value is None or value == "":
             raise ValueError('Field tidak boleh kosong')
         return value
+    
+    @validator('kode_dosen')
+    def check_spasi(cls, value):
+        if re.search(r'\s', value):
+            raise ValueError('Kode Dosen tidak boleh mengandung spasi')
+        return value
 
 class Dosen(DosenBase):
     class Config():
