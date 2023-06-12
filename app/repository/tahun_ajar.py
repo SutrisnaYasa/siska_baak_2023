@@ -3,12 +3,13 @@ import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
+import datetime
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowTahunAjar]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        tahun_ajar_all = db.query(models.TahunAjar).all()
+        tahun_ajar_all = db.query(models.TahunAjar).filter(models.TahunAjar.deleted_at == None).all()
         if tahun_ajar_all:
             response["status"] = True
             response["msg"] = "Data Tahun Ajaran Berhasil Ditemukan"
@@ -37,18 +38,24 @@ def create(request: schemas.TahunAjar, db: Session) -> Dict[str, Union[bool, str
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    tahunajar = db.query(models.TahunAjar).filter(models.TahunAjar.id == id)
-    if not tahunajar.first():
-        response["msg"] = f"Data Tahun Ajaran dengan id {id} tidak ditemukan"
+    tahunajar = db.query(models.TahunAjar).filter(models.TahunAjar.id == id, models.TahunAjar.deleted_at.is_(None))
+    existing_tahunajar = tahunajar.first()
+    if not existing_tahunajar:
+        if db.query(models.TahunAjar).filter(models.TahunAjar.id == id).first():
+            response["msg"] = f"Data Tahun Ajaran dengan id {id} sudah dihapus"
+            status_code = status.HTTP_400_BAD_REQUEST
+        else:
+            response["msg"] = f"Data Tahun Ajaran dengan id {id} tidak ditemukan"
+            status_code = status.HTTP_404_NOT_FOUND
         content = json.dumps({"detail": [response]})
         return Response(
             content = content,
             media_type = "application/json",
-            status_code = status.HTTP_404_NOT_FOUND,
-            headers = {"X-Error": "Data Tahun Ajaran tidak ditemukan"}
+            status_code = status_code,
+            headers = {"X-Error": response["msg"]}
         )
     try:
-        tahunajar.delete(synchronize_session = False)
+        tahunajar.update({models.TahunAjar.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Tahun Ajaran Berhasil di Hapus"
@@ -66,6 +73,15 @@ def update(id: int, request: schemas.TahunAjar, db: Session) -> Dict[str, Union[
             content = content,
             media_type = "application/json",
             status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data Tahun Ajaran tidak ditemukan"}
+        )
+    if tahunajar.first().deleted_at:
+        response["msg"] = f"Data Tahun Ajaran dengan id {id} telah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Tahun Ajaran tidak ditemukan"}
         )
     try:
@@ -90,6 +106,15 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowTahunAj
             content = content,
             media_type = "application/json",
             status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data Tahun Ajaran tidak ditemukan"}
+        )
+    if tahunajar.deleted_at:
+        response["msg"] = f"Data Tahun Ajaran dengan id {id} telah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Tahun Ajaran tidak ditemukan"}
         )
     try:
