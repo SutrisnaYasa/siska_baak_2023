@@ -122,7 +122,7 @@ def update(id: int, request: schemas.Fakultas, db: Session) -> Dict[str, Union[b
         return Response(
             content = content,
             media_type = "application/json",
-            status_code = status.HTTP_404_NOT_FOUND,
+            status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Fakultas tidak ditemukan"}
         )
     try:
@@ -156,7 +156,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowFakulta
         return Response(
             content = content,
             media_type = "application/json",
-            status_code = status.HTTP_404_NOT_FOUND,
+            status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Fakultas tidak ditemukan"}
         )
     try:

@@ -103,7 +103,7 @@ def update(id: int, request: schemas.Prodi, db: Session) -> Dict[str, Union[bool
         return Response(
             content = content,
             media_type = "application/json",
-            status_code = status.HTTP_404_NOT_FOUND,
+            status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Prodi tidak ditemukan"}
         )
     try:
@@ -136,7 +136,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowProdi]]
         return Response(
             content = content,
             media_type = "apllication/json",
-            status_code = status.HTTP_404_NOT_FOUND,
+            status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Prodi tidak ditemukan"}
         )
     try:
