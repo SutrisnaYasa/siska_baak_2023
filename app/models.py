@@ -16,6 +16,7 @@ class User(Base):
     status = Column(Boolean, default = True)
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
 # ENd users
 
 # Models Master Fakultas
@@ -39,6 +40,7 @@ class Prodi(Base):
     id_fakultas = Column(Integer, ForeignKey('fakultas.id_fakultas', ondelete="CASCADE", onupdate="CASCADE"))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     prodis = relationship("Fakultas", back_populates = "fakultass")
     dosen_prodi = relationship("Dosen", back_populates = "dosens")
     mhs_prodi = relationship("Mahasiswa", back_populates = "mhss")
@@ -55,6 +57,7 @@ class Ruangan(Base):
     gedung = Column(String(100))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     mengajar_ruangans = relationship("DosenMengajar", back_populates = "mengajar_ruangan")
     dosen_jadwal_ujian_ruangans = relationship("DosenMengajarJadwalUjian", back_populates = "dosen_jadwal_ujian_ruangan")
 # End Master Ruangan
@@ -69,6 +72,7 @@ class TahunAjar(Base):
     tanggal_akhir = Column(Date)
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     mengajar_tahun_ajars = relationship("DosenMengajar", back_populates = "mengajar_tahun_ajar")
     irs_tahun_ajars = relationship("MahasiswaIrs", back_populates = "irs_tahun_ajar")
 # End Master Tahun Ajar
@@ -104,6 +108,7 @@ class Mahasiswa(Base):
     bidang_minat = Column(String(100))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     mhss = relationship("Prodi", back_populates = "mhs_prodi")
     mhsalamats = relationship("MahasiswaAlamat", back_populates = "mhsalamat", cascade="all,delete")
     mhsortus = relationship("MahasiswaOrtu", back_populates = "mhsortu", cascade="all,delete")
@@ -128,6 +133,7 @@ class MahasiswaAlamat(Base):
     kode_pos = Column(String(100))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     mhsalamat = relationship("Mahasiswa", back_populates = "mhsalamats", cascade="all,delete")
 # End Mahasiswa Alamat
 
@@ -147,6 +153,7 @@ class MahasiswaOrtu(Base):
     kebutuhan_khusus_ortu = Column(String(100))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     mhsortu = relationship("Mahasiswa", back_populates = "mhsortus", cascade="all,delete")
 # End Mahasiswa Ortu
 
@@ -160,6 +167,7 @@ class MahasiswaTransfer(Base):
     ipk_lama = Column(Float)
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     mhstransfer = relationship("Mahasiswa", back_populates = "mhstransfers", cascade="all,delete")
     mhs_trf_nilai_konversis = relationship("MhsTrfNilaiKonversi", back_populates = "mhs_trf_nilai_konversi")
 # End Mahasiswa Transfer
@@ -193,6 +201,7 @@ class Dosen(Base):
     sumber_gaji = Column(String(100))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     dosens = relationship("Prodi", back_populates = "dosen_prodi")
     dosen_alamats = relationship("DosenAlamat", back_populates = "dosenalamats")
     dosen_riwayatstudis = relationship("DosenRiwayatStudi", back_populates = "dosenriwayatstudis")
@@ -218,6 +227,7 @@ class DosenAlamat(Base):
     kode_pos = Column(String(100))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     dosenalamats = relationship("Dosen", back_populates = "dosen_alamats")
 # End Dosen Alamat Models
 
@@ -238,6 +248,7 @@ class DosenRiwayatStudi(Base):
     judul_tugas_akhir = Column(String(100))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     dosenriwayatstudis = relationship("Dosen", back_populates = "dosen_riwayatstudis")
 # End Dosen Riwayat Studi Models
 
@@ -259,6 +270,7 @@ class DosenJabfung(Base):
     tanggal_mulai_cpns = Column(Date)
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     dosenjabfungs = relationship("Dosen", back_populates = "dosen_jabfung")
 # End Models Dosen Jabfung
 
@@ -276,6 +288,7 @@ class Kurikulum(Base):
     id_prodi = Column(Integer, ForeignKey('prodi.id_prodi', ondelete="CASCADE", onupdate="CASCADE"))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     kurikulums = relationship("Prodi", back_populates = "kurikulum_prodi")
     matkul_kurikulum = relationship("Matkul", back_populates = "matkul_kurikulums")
 # End Models Kurikulum
@@ -290,6 +303,7 @@ class MatkulKelompok(Base):
     id_dosen = Column(Integer, ForeignKey('dosen.id_dosen', ondelete="CASCADE", onupdate="CASCADE"))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     matkul_kelompok = relationship("Matkul", back_populates = "matkul_kelompoks")
     matkul_klp_dosen = relationship("Dosen", back_populates = "matkul_klp_dosens")
 # End Models Matkul Kelompok
@@ -313,6 +327,7 @@ class Matkul(Base):
     tatap_muka = Column(Integer)
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     matkul_prodis = relationship("Prodi", back_populates = "matkul_prodi")
     matkul_kurikulums = relationship("Kurikulum", back_populates = "matkul_kurikulum")
     matkul_kelompoks = relationship("MatkulKelompok", back_populates = "matkul_kelompok")
@@ -331,6 +346,7 @@ class Grade(Base):
     bobot = Column(Integer)
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     irs_grades = relationship("MahasiswaIrs", back_populates = "irs_grade")
 # End Models Grade
 
@@ -341,6 +357,7 @@ class MatkulPrasyarat(Base):
     id_matkul = Column(Integer, ForeignKey('matkul.id', ondelete = "CASCADE", onupdate = "CASCADE"))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     matkul_prasyarat = relationship("Matkul", back_populates = "matkul_prasyarats")
     matkul_prasyarat_details = relationship("MatkulPrasyaratDetail", back_populates = "matkul_prasyarat_detail")
 
@@ -354,6 +371,7 @@ class MatkulPrasyaratDetail(Base):
     id_syarat = Column(Integer, ForeignKey('matkul.id', ondelete = "CASCADE", onupdate = "CASCADE"))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     matkul_prasyarat_detail = relationship("MatkulPrasyarat", back_populates = "matkul_prasyarat_details")
     mkl_prasyarat_detail = relationship("Matkul", back_populates = "mkl_prasyarat_details")
 # End Models Matkul Prasyarat Detail
@@ -367,6 +385,7 @@ class DosenBimbinganPa(Base):
     status = Column(String(100))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     dosen_bimbingan_pa_dosen = relationship("Dosen", back_populates = "dosen_bimbingan_pa_dosens")
     dosen_bimbingan_pa_mhs = relationship("Mahasiswa", back_populates = "dosen_bimbingan_pa_mhss")
 # End Models Dosen Bimbingan PA
@@ -386,6 +405,7 @@ class DosenMengajar(Base):
     jml_kursi = Column(String(100))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     mengajar_dosen = relationship("Dosen", back_populates = "mengajar_dosens")
     mengajar_matkul = relationship("Matkul", back_populates = "mengajar_matkuls")
     mengajar_ruangan = relationship("Ruangan", back_populates = "mengajar_ruangans")
@@ -407,6 +427,7 @@ class DosenMengajarKontrak(Base):
     deskripsi_kontrak = Column(String(100))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     mengajar_dosen_kontrak = relationship("DosenMengajar", back_populates = "mengajar_dosen_kontraks")
 # End Model Dosen Mengajar Kontrak
 
@@ -423,6 +444,7 @@ class MhsTrfNilaiKonversi(Base):
     nilai_akhir = Column(Float)
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     mhs_trf_nilai_konversi = relationship("MahasiswaTransfer", back_populates = "mhs_trf_nilai_konversis")
     mhs_trf_nilai_konversi_matkul = relationship("Matkul", back_populates = "mhs_trf_nilai_konversi_matkuls")
 # End Models Mahasiswa Transfer Nilai Konversi
@@ -439,6 +461,7 @@ class MahasiswaIrs(Base):
     id_tahun_ajar = Column(Integer, ForeignKey('tahun_ajar.id', ondelete = "CASCADE", onupdate = "CASCADE"))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     irs_mhs = relationship("Mahasiswa", back_populates = "irs_mhss")
     irs_matkul = relationship("Matkul", back_populates = "irs_matkuls")
     irs_grade = relationship("Grade", back_populates = "irs_grades")
@@ -458,6 +481,7 @@ class MahasiswaIrsNilai(Base):
     uas = Column(Float)
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     mhs_nilai_irs = relationship("MahasiswaIrs", back_populates = "mhs_nilai_irss")
 # End Models Mahasiswa IRS Nilai
 
@@ -475,6 +499,7 @@ class DosenMengajarJadwalUjian(Base):
     id_ruangan = Column(Integer, ForeignKey('ruangan.id', ondelete = "CASCADE", onupdate = "CASCADE"))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
+    deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
     dosen_jadwal_ujian = relationship("DosenMengajar", back_populates = "dosen_jadwal_ujians")
     dosen_jadwal_ujian_ruangan = relationship("Ruangan", back_populates = "dosen_jadwal_ujian_ruangans")
 # End Models Dosen Mengajar Jadwal Ujian
