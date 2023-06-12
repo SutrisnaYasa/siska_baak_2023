@@ -4,19 +4,38 @@ from fastapi import HTTPException, status, Response
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Dict, Union
 import json
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
+import datetime
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenAll]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        dosen = db.query(models.Dosen, models.DosenAlamat, models.DosenRiwayatStudi, models.DosenJabfung).\
-        join(models.DosenAlamat, models.Dosen.id_dosen == models.DosenAlamat.id_dosen).\
-        join(models.DosenRiwayatStudi, models.Dosen.id_dosen == models.DosenRiwayatStudi.id_dosen).\
-        join(models.DosenJabfung, models.Dosen.id_dosen == models.DosenJabfung.id_dosen).\
-        all()
+        dosen = db.query(
+            models.Dosen, 
+            models.DosenAlamat, 
+            models.DosenRiwayatStudi, 
+            models.DosenJabfung
+        ).join(
+            models.DosenAlamat, 
+            models.Dosen.id_dosen == models.DosenAlamat.id_dosen
+        ).join(
+            models.DosenRiwayatStudi, 
+            models.Dosen.id_dosen == models.DosenRiwayatStudi.id_dosen
+        ).join(
+            models.DosenJabfung, 
+            models.Dosen.id_dosen == models.DosenJabfung.id_dosen
+        ).filter(
+            models.Dosen.deleted_at.is_(None),
+            models.DosenAlamat.deleted_at.is_(None),
+            models.DosenRiwayatStudi.deleted_at.is_(None),
+            models.DosenJabfung.deleted_at.is_(None)
+        ).all()
+
         result = []
         for tabel1, tabel2, tabel3, tabel4 in dosen:
-            result.append(schemas.ShowDosenAll(tabel1 = tabel1, tabel2 = tabel2, tabel3 = tabel3, tabel4 = tabel4))
+            result.append(schemas.ShowDosenAll(
+                tabel1 = tabel1, tabel2 = tabel2, tabel3 = tabel3, tabel4 = tabel4
+            ))
         if dosen:
             response["status"] = True
             response["msg"] = "Data Dosen Berhasil Ditemukan"
@@ -30,7 +49,11 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenAll]]:
 def create(table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga: schemas.DosenRiwayatStudi, table_empat: schemas.DosenJabfung, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
     try:
-        if db.query(exists().where(models.Dosen.kode_dosen == table_satu.kode_dosen)).scalar():
+        existing_dosen = db.query(models.Dosen).filter(
+            models.Dosen.kode_dosen == table_satu.kode_dosen,
+            models.Dosen.deleted_at.is_(None)
+        ).first()
+        if existing_dosen:
             response["msg"] = "Kode Dosen Sudah Ada"
             content = json.dumps({"detail": [response]})
             return Response(
@@ -72,8 +95,8 @@ def create(table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    dosen = db.query(models.Dosen).filter(models.Dosen.id_dosen == id)
-    if not dosen.first():
+    dosen = db.query(models.Dosen).filter(models.Dosen.id_dosen == id).first()
+    if not dosen:
         response["msg"] = f"Data Dosen dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
         return Response(
@@ -82,8 +105,23 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Dosen tidak ditemukan"}
         )
+    if dosen.deleted_at is not None:
+        response["msg"] = f"Data Dosen dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Dosen sudah dihapus"}
+        )
     try:
-        dosen.delete(synchronize_session = False)
+        db.query(models.Dosen).filter(models.Dosen.id_dosen == id).update({models.Dosen.deleted_at: datetime.datetime.now()})
+
+        db.query(models.DosenAlamat).filter(models.DosenAlamat.id_dosen == id).update({models.DosenAlamat.deleted_at: datetime.datetime.now()})
+
+        db.query(models.DosenRiwayatStudi).filter(models.DosenRiwayatStudi.id_dosen == id).update({models.DosenRiwayatStudi.deleted_at: datetime.datetime.now()})
+
+        db.query(models.DosenJabfung).filter(models.DosenJabfung.id_dosen == id).update({models.DosenJabfung.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Dosen Berhasil di Hapus"
@@ -93,9 +131,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga: schemas.DosenRiwayatStudi, table_empat: schemas.DosenJabfung, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    dosen = db.query(models.Dosen, models.DosenAlamat, models.DosenRiwayatStudi, models.DosenJabfung).\
-    filter(models.Dosen.id_dosen == id).\
-    all()
+    dosen = db.query(models.Dosen).filter(models.Dosen.id_dosen == id).first()
     if not dosen:
         response["msg"] = f"Data Dosen dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -104,6 +140,15 @@ def update(id: int, table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, t
             media_type = "application/json",
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Dosen tidak ditemukan"}
+        )
+    if dosen.deleted_at is not None:
+        response["msg"] = f"Data Dosen dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Dosen sudah dihapus"}
         )
     try:
         existing_dosen = db.query(models.Dosen).filter(models.Dosen.kode_dosen == table_satu.kode_dosen).first()
@@ -142,10 +187,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenAl
     join(models.DosenRiwayatStudi, models.Dosen.id_dosen == models.DosenRiwayatStudi.id_dosen).\
     join(models.DosenJabfung, models.Dosen.id_dosen == models.DosenJabfung.id_dosen).\
     filter(models.Dosen.id_dosen == id).\
-    all()
-    result = []
-    for tabel1, tabel2, tabel3, tabel4 in dosen:
-        result.append(schemas.ShowDosenAll(tabel1 = tabel1, tabel2 = tabel2, tabel3 = tabel3, tabel4 = tabel4))
+    first()
     if not dosen:
         response["msg"] = f"Data Dosen dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -155,6 +197,21 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenAl
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Dosen tidak ditemukan"}
         )
+    if dosen[0].deleted_at is not None:
+        response["msg"] = f"Data Dosen dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Dosen sudah dihapus"}
+        )
+    result = schemas.ShowDosenAll(
+        tabel1 = dosen[0],
+        tabel2 = dosen[1],
+        tabel3 = dosen[2],
+        tabel4 = dosen[3]
+    )
     try:
         response["status"] = True
         response["msg"] = "Data Dosen Berhasil Ditemukan"
