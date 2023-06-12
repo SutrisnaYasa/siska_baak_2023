@@ -3,7 +3,8 @@ import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
+import datetime
 
 # def get_all(db: Session) -> Dict[str, any]:
 #     response = {"status": False, "message": "", "data": []}
@@ -20,7 +21,7 @@ from sqlalchemy import exists
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowFakultas]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        fakultas_all = db.query(models.Fakultas).all()
+        fakultas_all = db.query(models.Fakultas).filter(models.Fakultas.deleted_at == None).all()
         if fakultas_all:
             response["status"] = True
             response["msg"] = "Data Fakultas Berhasil Ditemukan"
@@ -36,7 +37,8 @@ def create(request: schemas.Fakultas, db: Session) -> Dict[str, Union[bool, str,
     # new_fakultas = models.Fakultas(kode_fakultas = request.kode_fakultas, nama_fakultas = request.nama_fakultas)
     response = {"status": False, "msg": "", "data": None}
     try:
-        if db.query(exists().where(models.Fakultas.kode_fakultas == request.kode_fakultas)).scalar():
+        # if db.query(exists().where(models.Fakultas.kode_fakultas == request.kode_fakultas)).scalar():
+        if db.query(exists().where(and_(models.Fakultas.kode_fakultas == request.kode_fakultas, models.Fakultas.deleted_at.is_(None)))).scalar():
             response["msg"] = "Kode Fakultas Sudah Ada"
             content = json.dumps({"detail":[response]})
             return Response(
@@ -61,18 +63,28 @@ def create(request: schemas.Fakultas, db: Session) -> Dict[str, Union[bool, str,
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    fakultas = db.query(models.Fakultas).filter(models.Fakultas.id_fakultas == id)
-    if not fakultas.first():
-        response["msg"] = f"Data Fakultas dengan id {id} tidak ditemukan"
+    fakultas = db.query(models.Fakultas).filter(models.Fakultas.id_fakultas == id, models.Fakultas.deleted_at.is_(None))
+
+    existing_fakultas = fakultas.first()
+    if not existing_fakultas:
+        if db.query(models.Fakultas).filter(models.Fakultas.id_fakultas == id).first():
+            response["msg"] = f"Data Fakultas dengan id {id} sudah dihapus"
+            status_code = status.HTTP_400_BAD_REQUEST
+        else:
+            response["msg"] = f"Data Fakultas dengan id {id} tidak ditemukan"
+            status_code = status.HTTP_404_NOT_FOUND
+
         content = json.dumps({"detail":[response]})
         return Response(
             content = content, 
             media_type = "application/json", 
-            status_code = status.HTTP_404_NOT_FOUND, 
-            headers = {"X-Error": "Data Fakultas tidak ditemukan"}
+            status_code = status_code, 
+            headers = {"X-Error": response["msg"]}
         )
     try:
-        fakultas.delete(synchronize_session = False)
+        #fakultas.delete(synchronize_session = False)
+        # Mengatur deleted_at dengan nilai waktu saat ini
+        fakultas.update({models.Fakultas.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = f"Data Fakultas Berhasil di Hapus"
@@ -93,17 +105,27 @@ def update(id: int, request: schemas.Fakultas, db: Session) -> Dict[str, Union[b
             status_code = status.HTTP_404_NOT_FOUND, 
             headers = {"X-Error": "Data Fakultas tidak ditemukan"}
         )
+    
+    existing_fakultas = db.query(models.Fakultas).filter(models.Fakultas.kode_fakultas == request.kode_fakultas).first()
+    if existing_fakultas and existing_fakultas.id_fakultas != id:
+        response["msg"] = "Kode Fakultas Sudah Ada"
+        content = json.dumps({"detail":[response]})
+        return Response(
+            content = content, 
+            media_type = "application/json", 
+            status_code = status.HTTP_409_CONFLICT, 
+            headers = {"X-Error": "Data Conflict"}
+        )
+    if fakultas.first().deleted_at:
+        response["msg"] = f"Data Fakultas dengan id {id} telah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data Fakultas tidak ditemukan"}
+        )
     try:
-        existing_fakultas = db.query(models.Fakultas).filter(models.Fakultas.kode_fakultas == request.kode_fakultas).first()
-        if existing_fakultas and existing_fakultas.id_fakultas != id:
-            response["msg"] = "Kode Fakultas Sudah Ada"
-            content = json.dumps({"detail":[response]})
-            return Response(
-                content = content, 
-                media_type = "application/json", 
-                status_code = status.HTTP_409_CONFLICT, 
-                headers = {"X-Error": "Data Conflict"}
-            )
         fakultas.update(request.dict())
         db.commit()
         response["status"] = True
@@ -126,6 +148,15 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowFakulta
             content = content, 
             media_type = "application/json", 
             status_code = status.HTTP_404_NOT_FOUND, 
+            headers = {"X-Error": "Data Fakultas tidak ditemukan"}
+        )
+    if fakultas.deleted_at:
+        response["msg"] = f"Data Fakultas dengan id {id} telah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Fakultas tidak ditemukan"}
         )
     try:
