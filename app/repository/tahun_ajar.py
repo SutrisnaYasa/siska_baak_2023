@@ -82,7 +82,7 @@ def update(id: int, request: schemas.TahunAjar, db: Session) -> Dict[str, Union[
             content = content,
             media_type = "application/json",
             status_code = status.HTTP_400_BAD_REQUEST,
-            headers = {"X-Error": "Data Tahun Ajaran tidak ditemukan"}
+            headers = {"X-Error": "Data Tahun Ajaran telah dihapus"}
         )
     try:
         tahunajar.update(request.dict())
@@ -115,7 +115,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowTahunAj
             content = content,
             media_type = "application/json",
             status_code = status.HTTP_400_BAD_REQUEST,
-            headers = {"X-Error": "Data Tahun Ajaran tidak ditemukan"}
+            headers = {"X-Error": "Data Tahun Ajaran telah dihapus"}
         )
     try:
         response["status"] = True

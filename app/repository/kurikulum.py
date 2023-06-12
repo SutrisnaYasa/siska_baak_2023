@@ -83,7 +83,7 @@ def update(id: int, request: schemas.Kurikulum, db: Session) -> Dict[str, Union[
             content = content,
             media_type = "application/json",
             status_code = status.HTTP_400_BAD_REQUEST,
-            headers = {"X-Error": "Data Kurikulum tidak ditemukan"}
+            headers = {"X-Error": "Data Kurikulum telah dihapus"}
         )
     try:
         kurikulum.update(request.dict())
@@ -116,7 +116,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikul
             content = content,
             media_type = "application/json",
             status_code = status.HTTP_400_BAD_REQUEST,
-            headers = {"X-Error": "Data Kurikulum tidak ditemukan"}
+            headers = {"X-Error": "Data Kurikulum telah dihapus"}
         )
     try:
         response["status"] = True
