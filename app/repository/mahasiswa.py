@@ -4,19 +4,38 @@ from fastapi import HTTPException, status, Response
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Dict, Union
 import json
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
+import datetime
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaAll]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        mahasiswa = db.query(models.Mahasiswa, models.MahasiswaAlamat, models.MahasiswaOrtu, models.MahasiswaTransfer).\
-        join(models.MahasiswaAlamat, models.Mahasiswa.id_mahasiswa == models.MahasiswaAlamat.id_mahasiswa).\
-        join(models.MahasiswaOrtu, models.Mahasiswa.id_mahasiswa == models.MahasiswaOrtu.id_mahasiswa).\
-        join(models.MahasiswaTransfer, models.Mahasiswa.id_mahasiswa == models.MahasiswaTransfer.id_mahasiswa).\
-        all()
+        mahasiswa = db.query(
+            models.Mahasiswa, 
+            models.MahasiswaAlamat, 
+            models.MahasiswaOrtu, 
+            models.MahasiswaTransfer
+        ).join(
+            models.MahasiswaAlamat, 
+            models.Mahasiswa.id_mahasiswa == models.MahasiswaAlamat.id_mahasiswa
+        ).join(
+            models.MahasiswaOrtu, 
+            models.Mahasiswa.id_mahasiswa == models.MahasiswaOrtu.id_mahasiswa
+        ).join(
+            models.MahasiswaTransfer, 
+            models.Mahasiswa.id_mahasiswa == models.MahasiswaTransfer.id_mahasiswa
+        ).filter(
+            models.Mahasiswa.deleted_at.is_(None),
+            models.MahasiswaAlamat.deleted_at.is_(None),
+            models.MahasiswaOrtu.deleted_at.is_(None),
+            models.MahasiswaTransfer.deleted_at.is_(None)
+        ).all()
+
         result = []
         for tabel1, tabel2, tabel3, tabel4 in mahasiswa:
-            result.append(schemas.ShowMahasiswaAll(tabel1 = tabel1, tabel2 = tabel2, tabel3 = tabel3, tabel4 = tabel4))
+            result.append(schemas.ShowMahasiswaAll(
+                tabel1 = tabel1, tabel2 = tabel2, tabel3 = tabel3, tabel4 = tabel4
+            ))
         if mahasiswa:
             response["status"] = True
             response["msg"] = "Data Mahasiswa Berhasil Ditemukan"
@@ -30,7 +49,11 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaAll]
 def create(table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaAlamat, table_tiga: schemas.MahasiswaOrtu, table_empat: schemas.MahasiswaTransfer, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
     try:
-        if db.query(exists().where(models.Mahasiswa.nim == table_satu.nim)).scalar():
+        existing_mahasiswa = db.query(models.Mahasiswa).filter(
+            models.Mahasiswa.nim == table_satu.nim,
+            models.Mahasiswa.deleted_at.is_(None)
+        ).first()
+        if existing_mahasiswa:
             response["msg"] = "Nim Sudah Ada"
             content = json.dumps({"detail": [response]})
             return Response(
@@ -70,11 +93,10 @@ def create(table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaAlamat, ta
         response["msg"] = str(ex)
     return {"detail": [response]}
 
-
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    mahasiswa = db.query(models.Mahasiswa).filter(models.Mahasiswa.id_mahasiswa == id)
-    if not mahasiswa.first():
+    mahasiswa = db.query(models.Mahasiswa).filter(models.Mahasiswa.id_mahasiswa == id).first()
+    if not mahasiswa:
         response["msg"] = f"Data Mahasiswa dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
         return Response(
@@ -83,8 +105,28 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Mahasiswa tidak ditemukan"}
         )
+    if mahasiswa.deleted_at is not None:
+        response["msg"] = f"Data Mahasiswa dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Mahasiswa sudah dihapus"}
+        )
     try:
-        mahasiswa.delete(synchronize_session = False)
+        # Set deleted_at field for Mahasiswa
+        db.query(models.Mahasiswa).filter(models.Mahasiswa.id_mahasiswa == id).update({models.Mahasiswa.deleted_at: datetime.datetime.now()})
+        
+        # Set deleted_at field for MahasiswaAlamat
+        db.query(models.MahasiswaAlamat).filter(models.MahasiswaAlamat.id_mahasiswa == id).update({models.MahasiswaAlamat.deleted_at: datetime.datetime.now()})
+        
+        # Set deleted_at field for MahasiswaOrtu
+        db.query(models.MahasiswaOrtu).filter(models.MahasiswaOrtu.id_mahasiswa == id).update({models.MahasiswaOrtu.deleted_at: datetime.datetime.now()})
+        
+        # Set deleted_at field for MahasiswaTransfer
+        db.query(models.MahasiswaTransfer).filter(models.MahasiswaTransfer.id_mahasiswa == id).update({models.MahasiswaTransfer.deleted_at: datetime.datetime.now()})
+        
         db.commit()
         response["status"] = True
         response["msg"] = "Data Mahasiswa Berhasil di Hapus"
@@ -94,9 +136,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaAlamat, table_tiga: schemas.MahasiswaOrtu, table_empat: schemas.MahasiswaTransfer, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    mahasiswa = db.query(models.Mahasiswa, models.MahasiswaAlamat, models.MahasiswaOrtu, models.MahasiswaTransfer).\
-    filter(models.Mahasiswa.id_mahasiswa == id).\
-    all()
+    mahasiswa = db.query(models.Mahasiswa).filter(models.Mahasiswa.id_mahasiswa == id).first()
     if not mahasiswa:
         response["msg"] = f"Data Mahasiswa dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -105,6 +145,15 @@ def update(id: int, table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaA
             media_type = "application/json",
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Mahasiswa tidak ditemukan"}
+        )
+    if mahasiswa.deleted_at is not None:
+        response["msg"] = f"Data Mahasiswa dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Mahasiswa sudah dihapus"}
         )
     try:
         existing_mahasiswa = db.query(models.Mahasiswa).filter(models.Mahasiswa.nim == table_satu.nim).first()
@@ -143,10 +192,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasis
     join(models.MahasiswaOrtu, models.Mahasiswa.id_mahasiswa == models.MahasiswaOrtu.id_mahasiswa).\
     join(models.MahasiswaTransfer, models.Mahasiswa.id_mahasiswa == models.MahasiswaTransfer.id_mahasiswa).\
     filter(models.Mahasiswa.id_mahasiswa == id).\
-    all()
-    result = []
-    for tabel1, tabel2, tabel3, tabel4 in mahasiswa:
-        result.append(schemas.ShowMahasiswaAll(tabel1=tabel1, tabel2=tabel2, tabel3 = tabel3, tabel4=tabel4))
+    first()
     if not mahasiswa:
         response["msg"] = f"Data Mahasiswa dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -156,6 +202,22 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasis
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Mahasiswa tidak ditemukan"}
         )
+    if mahasiswa[0].deleted_at is not None:
+        response["msg"] = f"Data Mahasiswa dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Mahasiswa sudah dihapus"}
+        )
+    result = schemas.ShowMahasiswaAll(
+        tabel1 = mahasiswa[0],
+        tabel2 = mahasiswa[1],
+        tabel3 = mahasiswa[2],
+        tabel4 = mahasiswa[3]
+    )
+
     try:
         response["status"] = True
         response["msg"] = "Data Mahasiswa Berhasil Ditemukan"
