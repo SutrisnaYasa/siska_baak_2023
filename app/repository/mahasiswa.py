@@ -49,6 +49,20 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaAll]
 def create(table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaAlamat, table_tiga: schemas.MahasiswaOrtu, table_empat: schemas.MahasiswaTransfer, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
     try:
+        prodi_exists = db.query(models.Prodi).filter(
+            models.Prodi.id_prodi == table_satu.id_prodi,
+            models.Prodi.deleted_at.is_(None)
+        ).first()
+        if not prodi_exists:
+            response["msg"] = "Data Prodi tidak tersedia"
+            content = json.dumps({"detail": [response]})
+            return Response(
+                content = content,
+                media_type = "application/json",
+                status_code = status.HTTP_404_NOT_FOUND,
+                headers = {"X-Error": "Data tidak valid"}
+            )
+
         existing_mahasiswa = db.query(models.Mahasiswa).filter(
             models.Mahasiswa.nim == table_satu.nim,
             models.Mahasiswa.deleted_at.is_(None)
@@ -136,6 +150,20 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaAlamat, table_tiga: schemas.MahasiswaOrtu, table_empat: schemas.MahasiswaTransfer, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
+
+    prodi_exists = db.query(models.Prodi).filter(
+        models.Prodi.id_prodi == table_satu.id_prodi,
+        models.Prodi.deleted_at.is_(None)
+    ).first()
+    if not prodi_exists:
+        response["msg"] = "Data Prodi tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
     mahasiswa = db.query(models.Mahasiswa).filter(models.Mahasiswa.id_mahasiswa == id).first()
     if not mahasiswa:
         response["msg"] = f"Data Mahasiswa dengan id {id} tidak ditemukan"
@@ -156,7 +184,10 @@ def update(id: int, table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaA
             headers = {"X-Error": "Data Mahasiswa sudah dihapus"}
         )
     try:
-        existing_mahasiswa = db.query(models.Mahasiswa).filter(models.Mahasiswa.nim == table_satu.nim).first()
+        existing_mahasiswa = db.query(models.Mahasiswa).filter(
+            models.Mahasiswa.nim == table_satu.nim,
+            models.Mahasiswa.deleted_at.is_(None)
+        ).first()
         if existing_mahasiswa and existing_mahasiswa.id_mahasiswa != id:
             response["msg"] = "Nim Sudah Ada"
             content = json.dumps({"detail": [response]})
