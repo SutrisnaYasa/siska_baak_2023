@@ -22,6 +22,34 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulPrasyar
 
 def create(request: schemas.MatkulPrasyaratDetail, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulPrasyaratDetail]]:
     response = {"status": False, "msg": "", "data": None}
+    matkul_exists = db.query(models.Matkul).filter(
+        models.Matkul.id == request.id_syarat,
+        models.Matkul.deleted_at.is_(None)
+    ).first()
+    if not matkul_exists:
+        response["msg"] = "Data Matkul tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    
+    matkul_prasyarat_detail_exists = db.query(models.MatkulPrasyarat).filter(
+        models.MatkulPrasyarat.id == request.id_matkul_prasyarat,
+        models.MatkulPrasyarat.deleted_at.is_(None)
+    ).first()
+    if not matkul_prasyarat_detail_exists:
+        response["msg"] = "Data Matkul Prasyarat tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+
     try:
         new_matkul_prasyarat_detail = models.MatkulPrasyaratDetail(** request.dict())
         db.add(new_matkul_prasyarat_detail)
@@ -64,6 +92,34 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, request: schemas.MatkulPrasyaratDetail, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulPrasyaratDetail]]:
     response = {"status": False, "msg": "", "data": None}
+    matkul_exists = db.query(models.Matkul).filter(
+        models.Matkul.id == request.id_syarat,
+        models.Matkul.deleted_at.is_(None)
+    ).first()
+    if not matkul_exists:
+        response["msg"] = "Data Matkul tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    
+    matkul_prasyarat_detail_exists = db.query(models.MatkulPrasyarat).filter(
+        models.MatkulPrasyarat.id == request.id_matkul_prasyarat,
+        models.MatkulPrasyarat.deleted_at.is_(None)
+    ).first()
+    if not matkul_prasyarat_detail_exists:
+        response["msg"] = "Data Matkul Prasyarat tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+
     matkul_prasyarat_detail = db.query(models.MatkulPrasyaratDetail).filter(models.MatkulPrasyaratDetail.id == id)
     if not matkul_prasyarat_detail.first():
         response["msg"] = f"Data Fakultas dengan id {id} tidak ditemukan"
