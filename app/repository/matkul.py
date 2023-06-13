@@ -3,12 +3,13 @@ import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
+import datetime
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkul]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        matkul_all = db.query(models.Matkul).all()
+        matkul_all = db.query(models.Matkul).filter(models.Matkul.deleted_at == None).all()
         if matkul_all:
             response["status"] = True
             response["msg"] = "Data Matkul Berhasil Ditemukan"
@@ -37,18 +38,25 @@ def create(request: schemas.Matkul, db: Session) -> Dict[str, Union[bool, str, s
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    matkul = db.query(models.Matkul).filter(models.Matkul.id == id)
-    if not matkul.first():
-        response["msg"] = f"Data Matkul dengan id {id} tidak ditemukan"
+    matkul = db.query(models.Matkul).filter(models.Matkul.id == id, models.Matkul.deleted_at.is_(None))
+
+    existing_matkul = matkul.first()
+    if not existing_matkul:
+        if db.query(models.Matkul).filter(models.Matkul.id == id).first():
+            response["msg"] = f"Data Matkul dengan id {id} sudah dihapus"
+            status_code = status.HTTP_400_BAD_REQUEST
+        else:
+            response["msg"] = f"Data Matkul dengan id {id} tidak ditemukan"
+            status_code = status.HTTP_404_NOT_FOUND
         content = json.dumps({"detail": [response]})
         return Response(
             content = content,
             media_type = "application/json",
-            status_code = status.HTTP_404_NOT_FOUND,
-            headers = {"X-Error": "Data Matkul tidak ditemukan"}
+            status_code = status_code,
+            headers = {"X-Error": response["msg"]}
         )
     try:
-        matkul.delete(synchronize_session = False)
+        matkul.update({models.Matkul.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Matkul Berhasil di Hapus"
@@ -67,6 +75,15 @@ def update(id: int, request: schemas.Matkul, db: Session) -> Dict[str, Union[boo
             media_type = "application/json",
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Matkul tidak ditemukan"}
+        )
+    if matkul.first().deleted_at:
+        response["msg"] = f"Data Matkul dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Matkul sudah dihapus"}
         )
     try:
         matkul.update(request.dict())
@@ -91,6 +108,15 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkul]
             media_type = "application/json",
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Matkul tidak ditemukan"}
+        )
+    if matkul.deleted_at:
+        response["msg"] = f"Data Matkul dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Matkul sudah dihapus"}
         )
     try:
         response["status"] = True
