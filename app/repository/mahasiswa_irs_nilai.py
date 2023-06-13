@@ -22,6 +22,19 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaIrsN
 
 def create(request: schemas.MahasiswaIrsNilai, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaIrsNilai]]:
     response = {"status": False, "msg": "", "data": None}
+    mhs_irs_exists = db.query(models.MahasiswaIrs).filter(
+        models.MahasiswaIrs.id == request.id_mahasiswa_irs,
+        models.MahasiswaIrs.deleted_at.is_(None)
+    ).first()
+    if not mhs_irs_exists:
+        response["msg"] = "Data IRS Mahasiswa tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
     try:
         new_mahasiswa_irs_nilai = models.MahasiswaIrsNilai(** request.dict())
         db.add(new_mahasiswa_irs_nilai)
@@ -66,6 +79,20 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, request: schemas.MahasiswaIrsNilai, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaIrsNilai]]:
     response = {"status": False, "msg": "", "data": None}
+    mhs_irs_exists = db.query(models.MahasiswaIrs).filter(
+        models.MahasiswaIrs.id == request.id_mahasiswa_irs,
+        models.MahasiswaIrs.deleted_at.is_(None)
+    ).first()
+    if not mhs_irs_exists:
+        response["msg"] = "Data IRS Mahasiswa tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+
     mahasiswa_irs_nilai = db.query(models.MahasiswaIrsNilai).filter(models.MahasiswaIrsNilai.id == id)
     if not mahasiswa_irs_nilai.first():
         response["msg"] = f"Data Nilai IRS Mahasiswa dengan id {id} tidak ditemukan"
