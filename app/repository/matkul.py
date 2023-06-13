@@ -22,6 +22,58 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkul]]:
 
 def create(request: schemas.Matkul, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkul]]:
     response = {"status": False, "msg": "", "data": None}
+    # Cek Prodi Tersedia
+    prodi_exists = db.query(models.Prodi).filter(
+        models.Prodi.id_prodi == request.id_prodi,
+        models.Prodi.deleted_at.is_(None)
+    ).first()
+    if not prodi_exists:
+        response["msg"] = "Data Prodi tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    # Cek Matkul Kelompok Tersedia
+    matkul_kelompok_exists = db.query(models.MatkulKelompok).filter(
+        models.MatkulKelompok.id == request.id_matkul_kelompok,
+        models.MatkulKelompok.deleted_at.is_(None)
+    ).first()
+    if not prodi_exists:
+        response["msg"] = "Data Matkul Kelompok tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+
+    # Cek Kurikulum Tersedia
+    kurikulum_exists = db.query(models.Kurikulum).filter(
+        models.Kurikulum.id == request.id_kurikulum,
+        models.Kurikulum.deleted_at.is_(None)
+    ).first()
+    if not prodi_exists:
+        response["msg"] = "Data Kurikulum tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    # if not prodi_exists or not matkul_kelompok_exists or not kurikulum_exists:
+    #     response["msg"] = "Data Prodi/Kurikulum/Matkul Kelompok tidak tersedia"
+    #     content = json.dumps({"detail": [response]})
+    #     return Response(
+    #         content = content,
+    #         media_type = "application/json",
+    #         status_code = status.HTTP_404_NOT_FOUND,
+    #         headers = {"X-Error": "Data tidak valid"}
+    #     )
     try:
         new_matkul = models.Matkul(** request.dict())
         db.add(new_matkul)
@@ -66,6 +118,51 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, request: schemas.Matkul, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkul]]:
     response = {"status": False, "msg": "", "data": None}
+    # Cek Prodi Tersedia
+    prodi_exists = db.query(models.Prodi).filter(
+        models.Prodi.id_prodi == request.id_prodi,
+        models.Prodi.deleted_at.is_(None)
+    ).first()
+    if not prodi_exists:
+        response["msg"] = "Data Prodi tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+        
+    # Cek Matkul Kelompok Tersedia
+    matkul_kelompok_exists = db.query(models.MatkulKelompok).filter(
+        models.MatkulKelompok.id == request.id_matkul_kelompok,
+        models.MatkulKelompok.deleted_at.is_(None)
+    ).first()
+    if not prodi_exists:
+        response["msg"] = "Data Matkul Kelompok tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+        
+    # Cek Kurikulum Tersedia
+    kurikulum_exists = db.query(models.Kurikulum).filter(
+        models.Kurikulum.id == request.id_kurikulum,
+        models.Kurikulum.deleted_at.is_(None)
+    ).first()
+    if not prodi_exists:
+        response["msg"] = "Data Kurikulum tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+
     matkul = db.query(models.Matkul).filter(models.Matkul.id == id)
     if not matkul.first():
         response["msg"] = f"Data Matkul dengan id {id} tidak ditemukan"
