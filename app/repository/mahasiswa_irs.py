@@ -22,6 +22,74 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaIrs]
 
 def create(request: schemas.MahasiswaIrs, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaIrs]]:
     response = {"status": False, "msg": "", "data": None}
+
+    mahasiswa_exists = db.query(models.Mahasiswa).filter(
+        models.Mahasiswa.id_mahasiswa == request.id_mahasiswa,
+        models.Mahasiswa.deleted_at.is_(None)
+    ).first()
+    if not mahasiswa_exists:
+        response["msg"] = "Data Mahasiswa tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    matkul_exists = db.query(models.Matkul).filter(
+        models.Matkul.id == request.id_matkul,
+        models.Matkul.deleted_at.is_(None)
+    ).first()
+    if not matkul_exists:
+        response["msg"] = "Data Matkul tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    dosen_mengajar_exists = db.query(models.DosenMengajar).filter(
+        models.DosenMengajar.id == request.id_dosen_mengajar,
+        models.DosenMengajar.deleted_at.is_(None)
+    ).first()
+    if not dosen_mengajar_exists:
+        response["msg"] = "Data Dosen Mengajar tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    grade_exists = db.query(models.Grade).filter(
+        models.Grade.id == request.id_grade,
+        models.Grade.deleted_at.is_(None)
+    ).first()
+    if not grade_exists:
+        response["msg"] = "Data Grade tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    tahun_ajar_exists = db.query(models.TahunAjar).filter(
+        models.TahunAjar.id == request.id_tahun_ajar,
+        models.TahunAjar.deleted_at.is_(None)
+    ).first()
+    if not tahun_ajar_exists:
+        response["msg"] = "Data Tahun Ajaran tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+
+
     try:
         new_mahasiswa_irs = models.MahasiswaIrs(** request.dict())
         db.add(new_mahasiswa_irs)
@@ -66,6 +134,74 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, request: schemas.MahasiswaIrs, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaIrs]]:
     response = {"status": False, "msg": "", "data": None}
+
+    mahasiswa_exists = db.query(models.Mahasiswa).filter(
+        models.Mahasiswa.id_mahasiswa == request.id_mahasiswa,
+        models.Mahasiswa.deleted_at.is_(None)
+    ).first()
+    if not mahasiswa_exists:
+        response["msg"] = "Data Mahasiswa tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    matkul_exists = db.query(models.Matkul).filter(
+        models.Matkul.id == request.id_matkul,
+        models.Matkul.deleted_at.is_(None)
+    ).first()
+    if not matkul_exists:
+        response["msg"] = "Data Matkul tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    dosen_mengajar_exists = db.query(models.DosenMengajar).filter(
+        models.DosenMengajar.id == request.id_dosen_mengajar,
+        models.DosenMengajar.deleted_at.is_(None)
+    ).first()
+    if not dosen_mengajar_exists:
+        response["msg"] = "Data Dosen Mengajar tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    grade_exists = db.query(models.Grade).filter(
+        models.Grade.id == request.id_grade,
+        models.Grade.deleted_at.is_(None)
+    ).first()
+    if not grade_exists:
+        response["msg"] = "Data Grade tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    tahun_ajar_exists = db.query(models.TahunAjar).filter(
+        models.TahunAjar.id == request.id_tahun_ajar,
+        models.TahunAjar.deleted_at.is_(None)
+    ).first()
+    if not tahun_ajar_exists:
+        response["msg"] = "Data Tahun Ajaran tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+
+
     mahasiswa_irs = db.query(models.MahasiswaIrs).filter(models.MahasiswaIrs.id == id)
     if not mahasiswa_irs.first():
         response["msg"] = f"Data IRS Mahasiswa dengan id {id} tidak ditemukan"
