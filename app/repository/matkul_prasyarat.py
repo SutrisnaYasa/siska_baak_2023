@@ -3,12 +3,13 @@ import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
+import datetime
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulPrasyarat]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        matkul_prasyarat_all = db.query(models.MatkulPrasyarat).all()
+        matkul_prasyarat_all = db.query(models.MatkulPrasyarat).filter(models.MatkulPrasyarat.deleted_at == None).all()
         if matkul_prasyarat_all:
             response["status"] = True
             response["msg"] = "Data Matkul Prasyarat Berhasil Ditemukan"
@@ -37,18 +38,25 @@ def create(request: schemas.MatkulPrasyarat, db: Session) -> Dict[str, Union[boo
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    matkul_prasyarat = db.query(models.MatkulPrasyarat).filter(models.MatkulPrasyarat.id == id)
-    if not matkul_prasyarat.first():
-        response["msg"] = f"Data Matkul Prasyarat dengan id {id} tidak ditemukan"
+    matkul_prasyarat = db.query(models.MatkulPrasyarat).filter(models.MatkulPrasyarat.id == id, models.MatkulPrasyarat.deleted_at.is_(None))
+
+    existing_matkulprasyarat = matkul_prasyarat.first()
+    if not existing_matkulprasyarat:
+        if db.query(models.MatkulPrasyarat).filter(models.MatkulPrasyarat.id == id).first():
+            response["msg"] = f"Data Matkul Prasyarat dengan id {id} sudah dihapus"
+            status_code = status.HTTP_400_BAD_REQUEST
+        else:
+            response["msg"] = f"Data Matkul Prasyarat dengan id {id} tidak ditemukan"
+            status_code = status.HTTP_404_NOT_FOUND
         content = json.dumps({"detail": [response]})
         return Response(
             content = content, 
             media_type = "application/json", 
-            status_code = status.HTTP_404_NOT_FOUND, 
-            headers = {"X-Error": "Data Matkul Prasyarat tidak ditemukan"}
+            status_code = status_code,
+            headers = {"X-Error": response["msg"]}
         )
     try:
-        matkul_prasyarat.delete(synchronize_session = False)
+        matkul_prasyarat.update({models.MatkulPrasyarat.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Matkul Prasyarat Berhasil di Hapus"
@@ -67,6 +75,15 @@ def update(id: int, request: schemas.MatkulPrasyarat, db: Session) -> Dict[str, 
             media_type = "application/json", 
             status_code = status.HTTP_404_NOT_FOUND, 
             headers = {"X-Error": "Data Matkul Prasyarat tidak ditemukan"}
+        )
+    if matkul_prasyarat.first().deleted_at:
+        response["msg"] = f"Data Matkul Prasyarat dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Matkul Prasyarat sudah dihapus"}
         )
     try:
         matkul_prasyarat.update(request.dict())
@@ -91,6 +108,15 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulP
             media_type = "application/json", 
             status_code = status.HTTP_404_NOT_FOUND, 
             headers = {"X-Error": "Data Matkul Prasyarat tidak ditemukan"}
+        )
+    if matkul_prasyarat.deleted_at:
+        response["msg"] = f"Data Matkul Prasyarat dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Matkul Prasyarat sudah dihapus"}
         )
     try:
         response["status"] = True

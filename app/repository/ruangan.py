@@ -110,7 +110,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowRuangan
             headers = {"X-Error": "Data Ruangan tidak ditemukan"}
         )
     if ruangan.deleted_at:
-        response["msg"] = f"Data Ruangan dengan id {id} telah dihapus"
+        response["msg"] = f"Data Ruangan dengan id {id} sudah dihapus"
         content = json.dumps({"detail": [response]})
         return Response(
             content = content,
