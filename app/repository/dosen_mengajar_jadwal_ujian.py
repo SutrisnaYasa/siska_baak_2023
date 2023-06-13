@@ -3,12 +3,13 @@ import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
+import datetime
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMengajarJadwalUjian]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        dosen_mengajar_jadwal_ujian_all = db.query(models.DosenMengajarJadwalUjian).all()
+        dosen_mengajar_jadwal_ujian_all = db.query(models.DosenMengajarJadwalUjian).filter(models.DosenMengajarJadwalUjian.deleted_at == None).all()
         if dosen_mengajar_jadwal_ujian_all:
             response["status"] = True
             response["msg"] = "Data Jadwal Ujian Dosen Mengajar Berhasil Ditemukan"
@@ -37,18 +38,25 @@ def create(request: schemas.DosenMengajarJadwalUjian, db: Session) -> Dict[str, 
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    dosen_mengajar_jadwal_ujian = db.query(models.DosenMengajarJadwalUjian).filter(models.DosenMengajarJadwalUjian.id == id)
-    if not dosen_mengajar_jadwal_ujian.first():
-        response["msg"] = f"Data Jadwal Ujian Dosen Mengajar dengan id {id} tidak ditemukan"
-        content = json.dumps({"detail":[response]})
+    dosen_mengajar_jadwal_ujian = db.query(models.DosenMengajarJadwalUjian).filter(models.DosenMengajarJadwalUjian.id == id, models.DosenMengajarJadwalUjian.deleted_at.is_(None))
+
+    existing_dosen_mengajar_jadwal_ujian = dosen_mengajar_jadwal_ujian.first()
+    if not existing_dosen_mengajar_jadwal_ujian:
+        if db.query(models.DosenMengajarJadwalUjian).filter(models.DosenMengajarJadwalUjian.id == id).first():
+            response["msg"] = f"Data Jadwal Ujian Dosen Mengajar dengan id {id} sudah dihapus"
+            status_code = status.HTTP_400_BAD_REQUEST
+        else:
+            response["msg"] = f"Data Jadwal Ujian Dosen Mengajar dengan id {id} tidak ditemukan"
+            status_code = status.HTTP_404_NOT_FOUND
+        content = json.dumps({"detail": [response]})
         return Response(
-            content = content, 
-            media_type = "application/json", 
-            status_code = status.HTTP_404_NOT_FOUND, 
-            headers = {"X-Error": "Data Jadwal Ujian Dosen Mengajar tidak ditemukan"}
-        )
+            content = content,
+            media_type = "application/json",
+            status_code = status_code,
+            headers = {"X-Error": response["msg"]}
+       )
     try:
-        dosen_mengajar_jadwal_ujian.delete(synchronize_session = False)
+        dosen_mengajar_jadwal_ujian.update({models.DosenMengajarJadwalUjian.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Jadwal Ujian Dosen Mengajar Berhasil di Hapus"
@@ -67,6 +75,15 @@ def update(id: int, request: schemas.DosenMengajarJadwalUjian, db: Session) -> D
             media_type = "application/json", 
             status_code = status.HTTP_404_NOT_FOUND, 
             headers = {"X-Error": "Data Jadwal Ujian Dosen Mengajar tidak ditemukan"}
+        )
+    if dosen_mengajar_jadwal_ujian.first().deleted_at:
+        response["msg"] = f"Data Jadwal Ujian Dosen Mengajar dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Jadwal Ujian Dosen Mengajar sudah dihapus"}
         )
     try:
         dosen_mengajar_jadwal_ujian.update(request.dict())
@@ -91,6 +108,15 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMe
             media_type = "application/json", 
             status_code = status.HTTP_404_NOT_FOUND, 
             headers = {"X-Error": "Data Jadwal Ujian Dosen Mengajar tidak ditemukan"}
+        )
+    if dosen_mengajar_jadwal_ujian.deleted_at:
+        response["msg"] = f"Data Jadwal Ujian Dosen Mengajar dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Jadwal Ujian Dosen Mengajar sudah dihapus"}
         )
     try:
         response["status"] = True
