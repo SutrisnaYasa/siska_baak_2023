@@ -3,12 +3,13 @@ import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
+import datetime
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenBimbinganPa]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        dosen_mengajar_all = db.query(models.DosenMengajar).all()
+        dosen_mengajar_all = db.query(models.DosenMengajar).filter(models.DosenMengajar.deleted_at == None).all()
         if dosen_mengajar_all:
             response["status"] = True
             response["msg"] = "Data Mengajar Dosen Berhasil Ditemukan"
@@ -37,18 +38,25 @@ def create(request: schemas.DosenMengajar, db: Session) -> Dict[str, Union[bool,
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    dosen_mengajar = db.query(models.DosenMengajar).filter(models.DosenMengajar.id == id)
-    if not dosen_mengajar.first():
-        response["msg"] = f"Data Mengajar Dosen dengan id {id} tidak ditemukan"
-        content = json.dumps({"detail":[response]})
+    dosen_mengajar = db.query(models.DosenMengajar).filter(models.DosenMengajar.id == id, models.DosenMengajar.deleted_at.is_(None))
+
+    existing_dosen_mengajar = dosen_mengajar.first()
+    if not existing_dosen_mengajar:
+        if db.query(models.DosenMengajar).filter(models.DosenMengajar.id == id).first():
+            response["msg"] = f"Data Ruangan dengan id {id} sudah dihapus"
+            status_code = status.HTTP_400_BAD_REQUEST
+        else:
+            response["msg"] = f"Data Ruangan dengan id {id} tidak ditemukan"
+            status_code = status.HTTP_404_NOT_FOUND
+        content = json.dumps({"detail": [response]})
         return Response(
-            content = content, 
-            media_type = "application/json", 
-            status_code = status.HTTP_404_NOT_FOUND, 
-            headers = {"X-Error": "Data Mengajar Dosen tidak ditemukan"}
+            content = content,
+            media_type = "application/json",
+            status_code = status_code,
+            headers = {"X-Error": response["msg"]}
         )
     try:
-        dosen_mengajar.delete(synchronize_session = False)
+        dosen_mengajar.update({models.DosenMengajar.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Mengajar Dosen Berhasil di Hapus"
@@ -67,6 +75,15 @@ def update(id: int, request: schemas.DosenMengajar, db: Session) -> Dict[str, Un
             media_type = "application/json", 
             status_code = status.HTTP_404_NOT_FOUND, 
             headers = {"X-Error": "Data Mengajar Dosen tidak ditemukan"}
+        )
+    if dosen_mengajar.first().deleted_at:
+        response["msg"] = f"Data Mengajar Dosen dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Mengajar Dosen sudah dihapus"}
         )
     try:
         dosen_mengajar.update(request.dict())
@@ -91,6 +108,15 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMe
             media_type = "application/json", 
             status_code = status.HTTP_404_NOT_FOUND, 
             headers = {"X-Error": "Data Mengajar Dosen tidak ditemukan"}
+        )
+    if dosen_mengajar.deleted_at:
+        response["msg"] = f"Data Mengajar Dosen dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Mengajar Dosen sudah dihapus"}
         )
     try:
         response["status"] = True
