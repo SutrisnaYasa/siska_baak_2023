@@ -22,6 +22,20 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikulum]]:
 
 def create(request: schemas.Kurikulum, db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikulum]]:
     response = {"status": False, "msg": "", "data": None}
+
+    prodi_exists = db.query(models.Prodi).filter(
+        models.Prodi.id_prodi == request.id_prodi,
+        models.Prodi.deleted_at.is_(None)
+    ).first()
+    if not prodi_exists:
+        response["msg"] = "Data Prodi tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
     try:
         new_kurikulum = models.Kurikulum(** request.dict())
         db.add(new_kurikulum)
@@ -66,6 +80,20 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, request: schemas.Kurikulum, db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikulum]]:
     response = {"status": False, "msg": "", "data": None}
+    prodi_exists = db.query(models.Prodi).filter(
+        models.Prodi.id_prodi == request.id_prodi,
+        models.Prodi.deleted_at.is_(None)
+    ).first()
+    if not prodi_exists:
+        response["msg"] = "Data Prodi tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+        
     kurikulum = db.query(models.Kurikulum).filter(models.Kurikulum.id == id)
     if not kurikulum.first():
         response["msg"] = f"Data Kurikulum dengan id {id} tidak ditemukan"
