@@ -3,12 +3,13 @@ import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
+import datetime
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMhsTrfNilaiKonversi]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        mhs_trf_nilai_konversi_all = db.query(models.MhsTrfNilaiKonversi).all()
+        mhs_trf_nilai_konversi_all = db.query(models.MhsTrfNilaiKonversi).filter(models.MhsTrfNilaiKonversi.deleted_at == None).all()
         if mhs_trf_nilai_konversi_all:
             response["status"] = True
             response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Berhasil Ditemukan"
@@ -37,18 +38,25 @@ def create(request: schemas.MhsTrfNilaiKonversi, db: Session) -> Dict[str, Union
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    mhs_trf_nilai_konversi = db.query(models.MhsTrfNilaiKonversi).filter(models.MhsTrfNilaiKonversi.id == id)
-    if not mhs_trf_nilai_konversi.first():
-        response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} tidak ditemukan"
-        content = json.dumps({"detail":[response]})
+    mhs_trf_nilai_konversi = db.query(models.MhsTrfNilaiKonversi).filter(models.MhsTrfNilaiKonversi.id == id, models.MhsTrfNilaiKonversi.deleted_at.is_(None))
+
+    existing_mhs_trf_nilai_konversi = mhs_trf_nilai_konversi.first()
+    if not existing_mhs_trf_nilai_konversi:
+        if db.query(models.MhsTrfNilaiKonversi).filter(models.MhsTrfNilaiKonversi.id == id).first():
+            response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} sudah dihapus"
+            status_code = status.HTTP_400_BAD_REQUEST
+        else:
+            response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} tidak ditemukan"
+            status_code = status.HTTP_404_NOT_FOUND
+        content = json.dumps({"detail": [response]})
         return Response(
-            content = content, 
-            media_type = "application/json", 
-            status_code = status.HTTP_404_NOT_FOUND, 
-            headers = {"X-Error": "Data Konversi Nilai Mahasiswa Transfer tidak ditemukan"}
+            content = content,
+            media_type = "application/json",
+            status_code = status_code,
+            headers = {"X-Error": response["msg"]}
         )
     try:
-        mhs_trf_nilai_konversi.delete(synchronize_session = False)
+        mhs_trf_nilai_konversi.update({models.MhsTrfNilaiKonversi.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Berhasil di Hapus"
@@ -67,6 +75,15 @@ def update(id: int, request: schemas.MhsTrfNilaiKonversi, db: Session) -> Dict[s
             media_type = "application/json", 
             status_code = status.HTTP_404_NOT_FOUND, 
             headers = {"X-Error": "Data Konversi Nilai Mahasiswa Transfer tidak ditemukan"}
+        )
+    if mhs_trf_nilai_konversi.first().deleted_at:
+        response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Konversi Nilai Mahasiswa Transfer sudah dihapus"}
         )
     try:
         mhs_trf_nilai_konversi.update(request.dict())
@@ -91,6 +108,15 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMhsTrfN
             media_type = "application/json", 
             status_code = status.HTTP_404_NOT_FOUND, 
             headers = {"X-Error": "Data Konversi Nilai Mahasiswa Transfer tidak ditemukan"}
+        )
+    if mhs_trf_nilai_konversi.deleted_at:
+        response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Konversi Nilai Mahasiswa Transfer sudah dihapus"}
         )
     try:
         response["status"] = True
