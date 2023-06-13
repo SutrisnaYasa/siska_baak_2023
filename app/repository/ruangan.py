@@ -77,13 +77,13 @@ def update(id: int, request: schemas.Ruangan, db: Session) -> Dict[str, Union[bo
             headers = {"X-Error": "Data Ruangan tidak ditemukan"}
         )
     if ruangan.first().deleted_at:
-        response["msg"] = f"Data Ruangan dengan id {id} telah dihapus"
+        response["msg"] = f"Data Ruangan dengan id {id} sudah dihapus"
         content = json.dumps({"detail": [response]})
         return Response(
             content = content,
             media_type = "application/json",
             status_code = status.HTTP_400_BAD_REQUEST,
-            headers = {"X-Error": "Data Ruangan telah dihapus"}
+            headers = {"X-Error": "Data Ruangan sudah dihapus"}
         )
     try:
         ruangan.update(request.dict())
@@ -116,7 +116,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowRuangan
             content = content,
             media_type = "application/json",
             status_code = status.HTTP_400_BAD_REQUEST,
-            headers = {"X-Error": "Data Ruangan telah dihapus"}
+            headers = {"X-Error": "Data Ruangan sudah dihapus"}
         )
     try:
         response["status"] = True

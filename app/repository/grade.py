@@ -3,12 +3,13 @@ import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
+import datetime
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowGrade]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        grade_all = db.query(models.Grade).all()
+        grade_all = db.query(models.Grade).filter(models.Grade.deleted_at == None).all()
         if grade_all:
             response["status"] = True
             response["msg"] = "Data Grade Berhasdil Ditemukan"
@@ -37,18 +38,25 @@ def create(request: schemas.Grade, db: Session) -> Dict[str, Union[bool, str, sc
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    grade = db.query(models.Grade).filter(models.Grade.id == id)
-    if not grade.first():
-        response["msg"] = f"Data Grade dengan id {id} tidak ditemukan"
+    grade = db.query(models.Grade).filter(models.Grade.id == id, models.Grade.deleted_at.is_(None))
+
+    existing_grade = grade.first()
+    if not existing_grade:
+        if db.query(models.Grade).filter(models.Grade.id == id).first():
+            response["msg"] = f"Data Grade dengan id {id} sudah dihapus"
+            status_code = status.HTTP_400_BAD_REQUEST
+        else:
+            response["msg"] = f"Data Grade dengan id {id} tidak ditemukan"
+            status_code = status.HTTP_404_NOT_FOUND
         content = json.dumps({"detail": [response]})
         return Response(
             content = content,
             media_type = "application/json",
-            status_code = status.HTTP_404_NOT_FOUND,
-            headers = {"X-Error": "Data Grade tidak ditemukan"}
+            status_code = status_code,
+            headers = {"X-Error": response["msg"]}
         )
     try:
-        grade.delete(synchronize_session = False)
+        grade.update({models.Grade.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Grade Berhasil di Hapus"
@@ -67,6 +75,15 @@ def update(id: int, request: schemas.Grade, db: Session) -> Dict[str, Union[bool
             media_type = "application/json",
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Grade tidak ditemukan"}
+        )
+    if grade.first().deleted_at:
+        response["msg"] = f"Data Grade dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Grade sudah di hapus"}
         )
     try:
         grade.update(request.dict())
@@ -91,6 +108,15 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowGrade]]
             media_type = "application/json",
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Grade tidak ditemukan"}
+        )
+    if grade.deleted_at:
+        response["msg"] = f"Data Grade dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Grade sudah dihapus"}
         )
     try:
         response["status"] = True
