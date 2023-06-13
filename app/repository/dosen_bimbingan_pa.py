@@ -22,6 +22,33 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenBimbinga
 
 def create(request: schemas.DosenBimbinganPa, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenBimbinganPa]]:
     response = {"status": False, "msg": "", "data": None}
+    mahasiswa_exists = db.query(models.Mahasiswa).filter(
+        models.Mahasiswa.id_mahasiswa == request.id_mahasiswa,
+        models.Mahasiswa.deleted_at.is_(None)
+    ).first()
+    if not mahasiswa_exists:
+        response["msg"] = "Data Mahasiswa tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    
+    dosen_exists= db.query(models.Dosen).filter(
+        models.Dosen.id_dosen == request.id_dosen,
+        models.Dosen.deleted_at.is_(None)
+    ).first()
+    if not dosen_exists:
+        response["msg"] = "Data Dosen tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
     try:
         new_dosen_bimbingan_pa = models.DosenBimbinganPa(** request.dict())
         db.add(new_dosen_bimbingan_pa)
@@ -66,6 +93,34 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, request: schemas.DosenBimbinganPa, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenBimbinganPa]]:
     response = {"status": False, "msg": "", "data": None}
+    mahasiswa_exists = db.query(models.Mahasiswa).filter(
+        models.Mahasiswa.id_mahasiswa == request.id_mahasiswa,
+        models.Mahasiswa.deleted_at.is_(None)
+    ).first()
+    if not mahasiswa_exists:
+        response["msg"] = "Data Mahasiswa tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    
+    dosen_exists= db.query(models.Dosen).filter(
+        models.Dosen.id_dosen == request.id_dosen,
+        models.Dosen.deleted_at.is_(None)
+    ).first()
+    if not dosen_exists:
+        response["msg"] = "Data Dosen tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+        
     dosen_bimbingan_pa = db.query(models.DosenBimbinganPa).filter(models.DosenBimbinganPa.id == id)
     if not dosen_bimbingan_pa.first():
         response["msg"] = f"Data Bimbingin Dosen PA dengan id {id} tidak ditemukan"
