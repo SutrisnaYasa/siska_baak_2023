@@ -23,6 +23,19 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowProdi]]:
 def create(request: schemas.Prodi, db: Session) -> Dict[str, Union[bool, str, schemas.ShowProdi]]:
     response = {"status": False, "msg": "", "data": None}
     try:
+        fakultas_exists = db.query(models.Fakultas).filter(
+            models.Fakultas.id_fakultas == request.id_fakultas,
+            models.Fakultas.deleted_at.is_(None)
+        ).first()
+        if not fakultas_exists:
+            response["msg"] = "Data Fakultas tidak tersedia"
+            content = json.dumps({"detail": [response]})
+            return Response(
+                content = content,
+                media_type = "application/json",
+                status_code = status.HTTP_404_NOT_FOUND,
+                headers = {"X-Error": "Data tidak valid" }
+            )
         if db.query(exists().where(and_(models.Prodi.kode_prodi == request.kode_prodi, models.Prodi.deleted_at.is_(None)))).scalar():
             response["msg"] = "Kode Prodi Sudah Ada"
             content = json.dumps({"detail": [response]})
@@ -87,6 +100,23 @@ def update(id: int, request: schemas.Prodi, db: Session) -> Dict[str, Union[bool
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Prodi tidak ditemukan"}
         )
+        
+    # Cek id fakultas ada atau tidak
+    fakultas_exists = db.query(models.Fakultas).filter(
+        models.Fakultas.id_fakultas == request.id_fakultas,
+        models.Fakultas.deleted_at.is_(None)
+    ).first()
+
+    if not fakultas_exists:
+        response["msg"] = "Data Fakultas tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+
     existing_prodi = db.query(models.Prodi).filter(models.Prodi.kode_prodi == request.kode_prodi).first()
     if existing_prodi and existing_prodi.id_prodi != id:
         response["msg"] = "Kode Prodi Sudah Ada"
