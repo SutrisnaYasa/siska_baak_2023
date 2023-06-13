@@ -22,6 +22,19 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMengajar
 
 def create(request: schemas.DosenMengajarKontrak, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMengajarKontrak]]:
     response = {"status": False, "msg": "", "data": None}
+    dosen_mengajar_exists = db.query(models.DosenMengajar).filter(
+        models.DosenMengajar.id == request.id_dosen_mengajar,
+        models.DosenMengajar.deleted_at.is_(None)
+    ).first()
+    if not dosen_mengajar_exists:
+        response["msg"] = "Data Kontrak Mengajar Dosen tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
     try:
         new_dosen_mengajar_kontrak = models.DosenMengajarKontrak(** request.dict())
         db.add(new_dosen_mengajar_kontrak)
@@ -66,6 +79,19 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, request: schemas.DosenMengajarKontrak, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMengajarKontrak]]:
     response = {"status": False, "msg": "", "data": None}
+    dosen_mengajar_exists = db.query(models.DosenMengajar).filter(
+        models.DosenMengajar.id == request.id_dosen_mengajar,
+        models.DosenMengajar.deleted_at.is_(None)
+    ).first()
+    if not dosen_mengajar_exists:
+        response["msg"] = "Data Kontrak Mengajar Dosen tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
     dosen_mengajar_kontrak = db.query(models.DosenMengajarKontrak).filter(models.DosenMengajarKontrak.id == id)
     if not dosen_mengajar_kontrak.first():
         response["msg"] = f"Data Kontrak Mengajar Dosen dengan id {id} tidak ditemukan"
