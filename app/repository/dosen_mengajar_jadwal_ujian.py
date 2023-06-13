@@ -22,6 +22,32 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMengajar
 
 def create(request: schemas.DosenMengajarJadwalUjian, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMengajarJadwalUjian]]:
     response = {"status": False, "msg": "", "data": None}
+    dosen_mengajar_exists = db.query(models.DosenMengajar).filter(
+        models.DosenMengajar.id == request.id_dosen_mengajar,
+        models.DosenMengajar.deleted_at.is_(None)
+    ).first()
+    if not dosen_mengajar_exists:
+        response["msg"] = "Data Mengajar Dosen tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    ruangan_exists = db.query(models.Ruangan).filter(
+        models.Ruangan.id == request.id_ruangan,
+        models.Ruangan.deleted_at.is_(None)
+    ).first()
+    if not ruangan_exists:
+        response["msg"] = "Data Ruangan tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
     try:
         new_dosen_mengajar_jadwal_ujian = models.DosenMengajarJadwalUjian(** request.dict())
         db.add(new_dosen_mengajar_jadwal_ujian)
@@ -66,6 +92,34 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, request: schemas.DosenMengajarJadwalUjian, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMengajarJadwalUjian]]:
     response = {"status": False, "msg": "", "data": None}
+    dosen_mengajar_exists = db.query(models.DosenMengajar).filter(
+        models.DosenMengajar.id == request.id_dosen_mengajar,
+        models.DosenMengajar.deleted_at.is_(None)
+    ).first()
+    if not dosen_mengajar_exists:
+        response["msg"] = "Data Mengajar Dosen tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    ruangan_exists = db.query(models.Ruangan).filter(
+        models.Ruangan.id == request.id_ruangan,
+        models.Ruangan.deleted_at.is_(None)
+    ).first()
+    if not ruangan_exists:
+        response["msg"] = "Data Ruangan tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+
+
     dosen_mengajar_jadwal_ujian = db.query(models.DosenMengajarJadwalUjian).filter(models.DosenMengajarJadwalUjian.id == id)
     if not dosen_mengajar_jadwal_ujian.first():
         response["msg"] = f"Data Jadwal Ujian Dosen Mengajar dengan id {id} tidak ditemukan"
