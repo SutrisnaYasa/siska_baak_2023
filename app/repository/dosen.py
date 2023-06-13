@@ -49,6 +49,20 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenAll]]:
 def create(table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga: schemas.DosenRiwayatStudi, table_empat: schemas.DosenJabfung, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
     try:
+        prodi_exists = db.query(models.Prodi).filter(
+            models.Prodi.id_prodi == table_satu.id_prodi,
+            models.Prodi.deleted_at.is_(None)
+        ).first()
+        if not prodi_exists:
+            response["msg"] = "Data Prodi tidak tersedia"
+            content = json.dumps({"detail": [response]})
+            return Response(
+                content = content,
+                media_type = "application/json",
+                status_code = status.HTTP_404_NOT_FOUND,
+                headers = {"X-Error": "Data tidak valid"}
+            )
+
         existing_dosen = db.query(models.Dosen).filter(
             models.Dosen.kode_dosen == table_satu.kode_dosen,
             models.Dosen.deleted_at.is_(None)
@@ -131,6 +145,21 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga: schemas.DosenRiwayatStudi, table_empat: schemas.DosenJabfung, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
+
+    prodi_exists = db.query(models.Prodi).filter(
+        models.Prodi.id_prodi == table_satu.id_prodi,
+        models.Prodi.deleted_at.is_(None)
+    ).first()
+    if not prodi_exists:
+        response["msg"] = "Data Prodi tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+
     dosen = db.query(models.Dosen).filter(models.Dosen.id_dosen == id).first()
     if not dosen:
         response["msg"] = f"Data Dosen dengan id {id} tidak ditemukan"
