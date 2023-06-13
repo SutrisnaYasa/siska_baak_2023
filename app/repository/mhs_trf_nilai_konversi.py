@@ -22,6 +22,32 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMhsTrfNilaiKo
 
 def create(request: schemas.MhsTrfNilaiKonversi, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMhsTrfNilaiKonversi]]:
     response = {"status": False, "msg": "", "data": None}
+    matkul_exists = db.query(models.Matkul).filter(
+        models.Matkul.id == request.id_matkul,
+        models.Matkul.deleted_at.is_(None)
+    ).first()
+    if not matkul_exists:
+        response["msg"] = "Data Matkul tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    mhs_trf_exists = db.query(models.MahasiswaTransfer).filter(
+        models.MahasiswaTransfer.id_mhs_transfer == request.id_mahasiswa_transfer,
+        models.MahasiswaTransfer.deleted_at.is_(None)
+    ).first()
+    if not mhs_trf_exists:
+        response["msg"] = "Data Mahasiswa Transfer tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
     try:
         new_mhs_trf_nilai_konversi = models.MhsTrfNilaiKonversi(** request.dict())
         db.add(new_mhs_trf_nilai_konversi)
@@ -66,6 +92,34 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, request: schemas.MhsTrfNilaiKonversi, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMhsTrfNilaiKonversi]]:
     response = {"status": False, "msg": "", "data": None}
+    
+    matkul_exists = db.query(models.Matkul).filter(
+        models.Matkul.id == request.id_matkul,
+        models.Matkul.deleted_at.is_(None)
+    ).first()
+    if not matkul_exists:
+        response["msg"] = "Data Matkul tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+    mhs_trf_exists = db.query(models.MahasiswaTransfer).filter(
+        models.MahasiswaTransfer.id_mhs_transfer == request.id_mahasiswa_transfer,
+        models.MahasiswaTransfer.deleted_at.is_(None)
+    ).first()
+    if not mhs_trf_exists:
+        response["msg"] = "Data Mahasiswa Transfer tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+
     mhs_trf_nilai_konversi = db.query(models.MhsTrfNilaiKonversi).filter(models.MhsTrfNilaiKonversi.id == id)
     if not mhs_trf_nilai_konversi.first():
         response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} tidak ditemukan"
