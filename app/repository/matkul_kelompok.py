@@ -22,6 +22,20 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulKelompo
 
 def create(request: schemas.MatkulKelompok, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulKelompok]]:
     response = {"status": False, "msg": "", "data": None}
+
+    dosen_exists = db.query(models.Dosen).filter(
+        models.Dosen.id_dosen == request.id_dosen,
+        models.Dosen.deleted_at.is_(None)
+    ).first()
+    if not dosen_exists:
+        response["msg"] = "Data Dosen tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
     try:
         new_matkul_kelompok = models.MatkulKelompok(** request.dict())
         db.add(new_matkul_kelompok)
@@ -66,6 +80,20 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, request: schemas.MatkulKelompok, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulKelompok]]:
     response = {"status": False, "msg": "", "data": None}
+    dosen_exists = db.query(models.Dosen).filter(
+        models.Dosen.id_dosen == request.id_dosen,
+        models.Dosen.deleted_at.is_(None)
+    ).first()
+    if not dosen_exists:
+        response["msg"] = "Data Dosen tidak tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+        
     matkul_kelompok = db.query(models.MatkulKelompok).filter(models.MatkulKelompok.id == id)
     if not matkul_kelompok.first():
         response["msg"] = f"Data Matkul Kelompak dengan id {id} tidak ditemukan"
