@@ -585,6 +585,7 @@ class ShowKurikulum(BaseModel):
     sks_pilihan: int
     status_aktif: str
     id_prodi: int
+    kurikulums: ShowProdi
 
     class Config():
         orm_mode = True

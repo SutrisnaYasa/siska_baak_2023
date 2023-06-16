@@ -18,6 +18,16 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikulum]]:
             response["msg"] = "Data Kurikulum Masih Kosong"
     except Exception as e:
         response["msg"] = str(e)
+        
+    data_all = []
+    for kurikulum in response["data"]:
+        kurikulum_data = schemas.ShowKurikulum.from_orm(kurikulum)
+        prodi = db.query(models.Prodi).get(kurikulum_data.id_prodi)
+        if prodi:
+            prodi_data = schemas.ShowProdi.from_orm(prodi)
+            kurikulum_data.kurikulums = prodi_data
+        data_all.append(kurikulum_data)
+    response["data"] = kurikulum_data
     return {"detail": [response]}
 
 def create(request: schemas.Kurikulum, db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikulum]]:
