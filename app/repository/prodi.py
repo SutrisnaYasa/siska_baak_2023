@@ -18,6 +18,13 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowProdi]]:
             response["msg"] = "Data Prodi Masih Kosong"
     except Exception as e:
         response["msg"] = str(e)
+
+    data_all = []
+    for prodi in response["data"]:
+        prodi_data = schemas.ShowProdi.from_orm(prodi)
+        prodi_data.prodis = schemas.ShowFakultas.from_orm(prodi.prodis)
+        data_all.append(prodi_data)
+    response["data"] = data_all
     return {"detail": [response]}
 
 def create(request: schemas.Prodi, db: Session) -> Dict[str, Union[bool, str, schemas.ShowProdi]]:
