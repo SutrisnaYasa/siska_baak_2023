@@ -119,6 +119,7 @@ class Ruangan(RuanganBase):
         orm_mode = True
 
 class ShowRuangan(BaseModel):
+    id: int
     nama_ruangan: str
     kapasitas: int
     gedung: str
@@ -145,6 +146,7 @@ class TahunAjar(TahunAjarBase):
         orm_mode = True
 
 class ShowTahunAjar(BaseModel):
+    id: int
     nama_tahun_ajar: str
     semester: str
     tanggal_mulai: date
@@ -199,6 +201,7 @@ class Mahasiswa(MahasiswaBase):
         orm_mode = True
 
 class ShowMahasiswa(BaseModel):
+    id_mahasiswa: int
     nim: str
     nik: str
     nisn: str
@@ -254,6 +257,7 @@ class MahasiswaAlamat(MahasiswaAlamatBase):
 
 class ShowMahasiswaAlamat(BaseModel):
     # id_mahasiswa: int
+    id_mhs_alamat: int
     alamat_rmh: str
     provinsi: str
     kab_kota: str
@@ -294,6 +298,7 @@ class MahasiswaOrtu(MahasiswaOrtuBase):
 
 class ShowMahasiswaOrtu(BaseModel):
     # id_mahasiswa: int
+    id_mhs_ortu: int
     status_hubungan: str
     nik: str
     nama_ortu: str
@@ -327,6 +332,7 @@ class MahasiswaTransfer(MahasiswaTransferBase):
 
 class ShowMahasiswaTransfer(BaseModel):
     # id_mahasiswa: int
+    id_mahasiswa_transfer: int
     kampus_asal: str
     nim_asal: str
     ipk_lama: float
@@ -389,6 +395,7 @@ class Dosen(DosenBase):
         orm_mode = True
 
 class ShowDosen(BaseModel):
+    id_dosen: int
     kode_dosen: str
     nidk: str
     nidn: str
@@ -440,6 +447,7 @@ class DosenAlamat(DosenAlamatBase):
         orm_mode = True
 
 class ShowDosenAlamat(BaseModel):
+    id: int
     alamat_rmh: str
     provinsi: str
     kab_kota: str
@@ -478,6 +486,7 @@ class DosenRiwayatStudi(DosenRiwayatStudiBase):
         orm_mode = True
 
 class ShowDosenRiwayatStudi(BaseModel):
+    id: int
     jenjang_pendidikan: str
     nama_kampus: str
     fakultas: str
@@ -518,6 +527,7 @@ class DosenJabfung(DosenJabfungBase):
         orm_mode = True
     
 class ShowDosenJabfung(BaseModel):
+    id: int
     jabatan_fungsional: str
     no_sk_jabfung: str
     pangkat: str
@@ -566,6 +576,7 @@ class Kurikulum(KurikulumBase):
         orm_mode = True
 
 class ShowKurikulum(BaseModel):
+    id: int
     nama: str
     tahun: str
     tgl_start: date
@@ -595,6 +606,7 @@ class MatkulKelompok(MatkulKelompokBase):
         orm_mode = True
 
 class ShowMatkulKelompok(BaseModel):
+    id: int
     nama_kelompok_matkul: str
     id_dosen: int
 
@@ -629,6 +641,7 @@ class Matkul(MatkulBase):
         orm_mode = True
 
 class ShowMatkul(BaseModel):
+    id: int
     kode_matkul: str
     nama_matkul: str
     id_matkul_kelompok: int
@@ -663,6 +676,7 @@ class Grade(GradeBase):
         orm_mode = True
 
 class ShowGrade(BaseModel):
+    id: int
     nilai_huruf: str
     bobot: int
 
@@ -685,6 +699,7 @@ class MatkulPrasyarat(MatkulPrasyaratBase):
         orm_mode = True
 
 class ShowMatkulPrasyarat(BaseModel):
+    id: int
     id_matkul: int
 
     class Config():
@@ -707,6 +722,7 @@ class MatkulPrasyaratDetail(MatkulPrasyaratDetailBase):
         orm_mode = True
     
 class ShowMatkulPrasyaratDetail(BaseModel):
+    id: int
     id_matkul_prasyarat: int
     id_syarat: int
 
@@ -731,6 +747,7 @@ class DosenBimbinganPa(DosenBimbinganPaBase):
         orm_mode = True
 
 class ShowDosenBimbinganPa(BaseModel):
+    id: int
     id_dosen: int
     id_mahasiswa: int
     status: str
@@ -762,6 +779,7 @@ class DosenMengajar(DosenMengajarBase):
         orm_mode = True
 
 class ShowDosenMengajar(BaseModel):
+    id: int
     id_dosen: int
     id_matkul: int
     hari: str
@@ -796,6 +814,7 @@ class DosenMengajarKontrak(DosenMengajarKontrakBase):
         orm_mode = True
 
 class ShowDosenMengajarKontrak(BaseModel):
+    id: int
     id_dosen_mengajar: int
     bobot_uas: int
     bobot_uts: int
@@ -828,6 +847,7 @@ class MhsTrfNilaiKonversi(MhsTrfNilaiKonversiBase):
         orm_mode = True
 
 class ShowMhsTrfNilaiKonversi(BaseModel):
+    id: int
     id_mahasiswa_transfer: int
     id_matkul_asal: str
     nama_matkul_asal: str
@@ -860,6 +880,7 @@ class MahasiswaIrs(MahasiswaIrsBase):
         orm_mode = True
 
 class ShowMahasiswaIrs(BaseModel):
+    id: int
     id_mahasiswa: int
     id_matkul: int
     id_dosen_mengajar: int
@@ -890,6 +911,7 @@ class MahasiswaIrsNilai(MahasiswaIrsNilaiBase):
         orm_mode = True
 
 class ShowMahasiswaIrsNilai(BaseModel):
+    id: int
     id_mahasiswa_irs: int
     keaktifan: float
     tugas: float
@@ -922,6 +944,7 @@ class DosenMengajarJadwalUjian(DosenMengajarJadwalUjianBase):
         orm_mode = True
 
 class ShowDosenMengajarJadwalUjian(BaseModel):
+    id: int
     id_dosen_mengajar: int
     jenis_ujian: str
     hari: str
