@@ -18,6 +18,13 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulKelompo
             response["msg"] = "Data Matkul Kelompok Masih Kosong"
     except Exception as e:
         response["msg"] = str(e)
+    
+    data_all = []
+    for matkul_kelompok in response["data"]:
+        matkul_kelompok_data = schemas.ShowMatkulKelompok.from_orm(matkul_kelompok)
+        matkul_kelompok_data.matkul_klp_dosen = schemas.ShowDataDosen.from_orm(matkul_kelompok.matkul_klp_dosen)
+        data_all.append(matkul_kelompok_data)
+    response["data"] = data_all
     return {"detail": [response]}
 
 def create(request: schemas.MatkulKelompok, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulKelompok]]:

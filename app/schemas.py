@@ -552,6 +552,16 @@ class ShowDosenAll(BaseModel):
     tabel4 : ShowDosenJabfung
 # End Schemas Show Dosen All
 
+# Schemas untuk data dosen di relasi tabel matkul kelompok
+class ShowDataDosen(BaseModel):
+    id_dosen: int
+    kode_dosen: str
+    nidk: str
+    nidn: str
+    nama: str
+    class Config():
+        orm_mode = True
+# End Schemas untuk data dosen di relasi tabel matkul kelompok
 
 
 # Schemas Kurikulum
@@ -610,6 +620,7 @@ class ShowMatkulKelompok(BaseModel):
     id: int
     nama_kelompok_matkul: str
     id_dosen: int
+    matkul_klp_dosen: ShowDataDosen
 
     class Config():
         orm_mode = True
