@@ -702,9 +702,10 @@ class ShowMatkul(BaseModel):
 # Schemas Grade
 class GradeBase(BaseModel):
     nilai_huruf: str
-    bobot: int
+    bobot_awal: int
+    bobot_akhir: int
     
-    @validator('nilai_huruf', 'bobot')
+    @validator('nilai_huruf', 'bobot_awal', 'bobot_akhir')
     def check_not_null(cls, value):
         if value is None or value == "":
             raise ValueError('Field tidak boleh kosong')
@@ -717,7 +718,8 @@ class Grade(GradeBase):
 class ShowGrade(BaseModel):
     id: int
     nilai_huruf: str
-    bobot: int
+    bobot_awal: int
+    bobot_akhir: int
 
     class Config():
         orm_mode = True
