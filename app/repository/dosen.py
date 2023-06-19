@@ -180,7 +180,10 @@ def update(id: int, table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, t
             headers = {"X-Error": "Data Dosen sudah dihapus"}
         )
     try:
-        existing_dosen = db.query(models.Dosen).filter(models.Dosen.kode_dosen == table_satu.kode_dosen).first()
+        existing_dosen = db.query(models.Dosen).filter(
+            models.Dosen.kode_dosen == table_satu.kode_dosen,
+            models.Dosen.deleted_at.is_(None)
+        ).first()
         if existing_dosen and existing_dosen.id_dosen != id:
             response["msg"] = "Kode Dosen Sudah Ada"
             content = json.dumps({"detail": [response]})
