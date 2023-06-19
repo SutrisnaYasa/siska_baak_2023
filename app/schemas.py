@@ -697,6 +697,14 @@ class ShowMatkul(BaseModel):
 
     class Config():
         orm_mode = True
+
+class ShowDataMatkul(BaseModel):
+    id: int
+    kode_matkul: str
+    nama_matkul: str
+
+    class Config():
+        orm_mode = True
 # End Schemas Matkul
 
 # Schemas Grade
@@ -741,7 +749,7 @@ class MatkulPrasyarat(MatkulPrasyaratBase):
 
 class ShowMatkulPrasyarat(BaseModel):
     id: int
-    id_matkul: int
+    matkul_prasyarat: ShowDataMatkul
 
     class Config():
         orm_mode = True
