@@ -753,6 +753,12 @@ class ShowMatkulPrasyarat(BaseModel):
 
     class Config():
         orm_mode = True
+
+class ShowDataMatkulPrasyarat(BaseModel):
+    id: int
+
+    class Config():
+        orm_mode = True
 # End Matkul Prasyarat
 
 # Schemas Matkul Prasyarat Detail
@@ -772,8 +778,8 @@ class MatkulPrasyaratDetail(MatkulPrasyaratDetailBase):
     
 class ShowMatkulPrasyaratDetail(BaseModel):
     id: int
-    id_matkul_prasyarat: int
-    id_syarat: int
+    mkl_prasyarat_detail: ShowDataMatkul
+    matkul_prasyarat_detail: ShowDataMatkulPrasyarat
 
     class Config():
         orm_mode = True
