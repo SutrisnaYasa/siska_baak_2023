@@ -123,17 +123,6 @@ def update(id: int, request: schemas.Prodi, db: Session) -> Dict[str, Union[bool
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data tidak valid"}
         )
-
-    existing_prodi = db.query(models.Prodi).filter(models.Prodi.kode_prodi == request.kode_prodi).first()
-    if existing_prodi and existing_prodi.id_prodi != id:
-        response["msg"] = "Kode Prodi Sudah Ada"
-        content = json.dumps({"detail": [response]})
-        return Response(
-            content = content,
-            media_type = "application/json",
-            status_code = status.HTTP_409_CONFLICT,
-            headers = {"X-Error": "Data Conflict"}
-        )
     if prodi.first().deleted_at:
         response["msg"] = f"Data Prodi dengan id {id} telah dihapus"
         content = json.dumps({"detail": [response]})
@@ -142,6 +131,22 @@ def update(id: int, request: schemas.Prodi, db: Session) -> Dict[str, Union[bool
             media_type = "application/json",
             status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Prodi telah dihapus"}
+        )
+
+    existing_prodi = db.query(models.Prodi).filter(
+        models.Prodi.kode_prodi == request.kode_prodi,
+        models.Prodi.deleted_at.is_(None),
+        models.Prodi.id_prodi != id
+    ).first()
+
+    if existing_prodi:
+        response["msg"] = "Kode Prodi Sudah Ada"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_409_CONFLICT,
+            headers = {"X-Error": "Data Conflict"}
         )
     try:
         prodi.update(request.dict())
