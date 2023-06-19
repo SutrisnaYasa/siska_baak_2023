@@ -100,6 +100,14 @@ class ShowProdi(BaseModel):
 
     class Config():
         orm_mode = True
+
+class ShowDataProdi(BaseModel):
+    id_prodi: int
+    kode_prodi: str
+    nama_prodi: str
+
+    class Config():
+        orm_mode = True
 # End Schemas Master Prodi
 
 # Schemas Master Ruangan
@@ -332,7 +340,7 @@ class MahasiswaTransfer(MahasiswaTransferBase):
 
 class ShowMahasiswaTransfer(BaseModel):
     # id_mahasiswa: int
-    id_mahasiswa_transfer: int
+    id_mhs_transfer: int
     kampus_asal: str
     nim_asal: str
     ipk_lama: float
@@ -599,6 +607,15 @@ class ShowKurikulum(BaseModel):
 
     class Config():
         orm_mode = True
+
+class ShowDataKurikulum(BaseModel):
+    id: int
+    nama: str
+    tahun: str
+    tgl_start: date
+
+    class Config():
+        orm_mode = True
 # End Schemas Kurikulum
 
 # Schemas Matkul Kelompok
@@ -621,6 +638,13 @@ class ShowMatkulKelompok(BaseModel):
     nama_kelompok_matkul: str
     id_dosen: int
     matkul_klp_dosen: ShowDataDosen
+
+    class Config():
+        orm_mode = True
+
+class ShowDataMatkulKelompok(BaseModel):
+    id: int
+    nama_kelompok_matkul: str
 
     class Config():
         orm_mode = True
@@ -656,17 +680,20 @@ class ShowMatkul(BaseModel):
     id: int
     kode_matkul: str
     nama_matkul: str
-    id_matkul_kelompok: int
+    # id_matkul_kelompok: int
     status_aktif: str
     status_wajib: str
-    id_prodi: int
+    # id_prodi: int
     deskripsi: str
     semester_buka: str
-    id_kurikulum: int
+    # id_kurikulum: int
     simulasi: int
     praktik_lapangan: int
     pratikum: int
     tatap_muka: int
+    matkul_prodis: ShowDataProdi
+    matkul_kurikulums: ShowDataKurikulum
+    matkul_kelompoks: ShowDataMatkulKelompok
 
     class Config():
         orm_mode = True
