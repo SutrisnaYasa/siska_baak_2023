@@ -22,7 +22,7 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikulum]]:
     data_all = []
     for kurikulum in response["data"]:
         kurikulum_data = schemas.ShowKurikulum.from_orm(kurikulum)
-        kurikulum_data.kurikulums = schemas.ShowProdi.from_orm(kurikulum.kurikulums)
+        kurikulum_data.kurikulums = schemas.ShowDataProdi.from_orm(kurikulum.kurikulums)
         data_all.append(kurikulum_data)
     response["data"] = data_all
     return {"detail": [response]}
