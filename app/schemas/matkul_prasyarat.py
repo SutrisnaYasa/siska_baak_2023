@@ -3,6 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 from datetime import date
 import re
+from schemas.matkul import ShowDataMatkul
 
 # Schemas Matkul Prasyarat
 class MatkulPrasyaratBase(BaseModel):

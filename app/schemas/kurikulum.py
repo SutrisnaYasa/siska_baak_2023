@@ -3,6 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 from datetime import date
 import re
+from schemas.prodi import ShowProdi
 
 # Schemas Kurikulum
 class KurikulumBase(BaseModel):

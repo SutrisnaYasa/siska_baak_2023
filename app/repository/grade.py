@@ -1,15 +1,16 @@
 from sqlalchemy.orm import Session
-import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
+from schemas.grade import Grade as schemasGrade, ShowGrade as schemasShowGrade
+from models.grade import Grade as modelsGrade
 
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowGrade]]:
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowGrade]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        grade_all = db.query(models.Grade).filter(models.Grade.deleted_at == None).all()
+        grade_all = db.query(modelsGrade).filter(modelsGrade.deleted_at == None).all()
         if grade_all:
             response["status"] = True
             response["msg"] = "Data Grade Berhasdil Ditemukan"
@@ -20,16 +21,16 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowGrade]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def create(request: schemas.Grade, db: Session) -> Dict[str, Union[bool, str, schemas.ShowGrade]]:
+def create(request: schemasGrade, db: Session) -> Dict[str, Union[bool, str, schemasShowGrade]]:
     response = {"status": False, "msg": "", "data": None}
     try:
-        new_grade = models.Grade(** request.dict())
+        new_grade = modelsGrade(** request.dict())
         db.add(new_grade)
         db.commit()
         db.refresh(new_grade)
         response["status"] = True
         response["msg"] = "Data Grade Berhasil di Input"
-        response["data"] = schemas.ShowGrade.from_orm(new_grade)
+        response["data"] = schemasShowGrade.from_orm(new_grade)
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -38,11 +39,11 @@ def create(request: schemas.Grade, db: Session) -> Dict[str, Union[bool, str, sc
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    grade = db.query(models.Grade).filter(models.Grade.id == id, models.Grade.deleted_at.is_(None))
+    grade = db.query(modelsGrade).filter(modelsGrade.id == id, modelsGrade.deleted_at.is_(None))
 
     existing_grade = grade.first()
     if not existing_grade:
-        if db.query(models.Grade).filter(models.Grade.id == id).first():
+        if db.query(modelsGrade).filter(modelsGrade.id == id).first():
             response["msg"] = f"Data Grade dengan id {id} sudah dihapus"
             status_code = status.HTTP_400_BAD_REQUEST
         else:
@@ -56,7 +57,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             headers = {"X-Error": response["msg"]}
         )
     try:
-        grade.update({models.Grade.deleted_at: datetime.datetime.now()})
+        grade.update({modelsGrade.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Grade Berhasil di Hapus"
@@ -64,9 +65,9 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def update(id: int, request: schemas.Grade, db: Session) -> Dict[str, Union[bool, str, schemas.ShowGrade]]:
+def update(id: int, request: schemasGrade, db: Session) -> Dict[str, Union[bool, str, schemasShowGrade]]:
     response = {"status": False, "msg": "", "data": None}
-    grade = db.query(models.Grade).filter(models.Grade.id == id)
+    grade = db.query(modelsGrade).filter(modelsGrade.id == id)
     if not grade.first():
         response["msg"] = f"Data Grade dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -90,16 +91,16 @@ def update(id: int, request: schemas.Grade, db: Session) -> Dict[str, Union[bool
         db.commit()
         response["status"] = True
         response["msg"] = "Data Grade Berhasil di Update"
-        response["data"] = schemas.ShowGrade.from_orm(grade.first())
+        response["data"] = schemasShowGrade.from_orm(grade.first())
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowGrade]]:
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowGrade]]:
     response = {"status": False, "msg": "", "data": None}
-    grade = db.query(models.Grade).filter(models.Grade.id == id).first()
+    grade = db.query(modelsGrade).filter(modelsGrade.id == id).first()
     if not grade:
         response["msg"] = f"Data Grade dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -121,7 +122,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowGrade]]
     try:
         response["status"] = True
         response["msg"] = "Data Grade Berhasil Ditemukan"
-        response["data"] = schemas.ShowGrade.from_orm(grade)
+        response["data"] = schemasShowGrade.from_orm(grade)
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

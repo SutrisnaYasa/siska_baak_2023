@@ -1,15 +1,16 @@
 from sqlalchemy.orm import Session
-import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
+from schemas.tahun_ajar import TahunAjar as schemasTahunAjar, ShowTahunAjar as schemasShowTahunAjar
+from models.tahun_ajar import TahunAjar as modelsTahunAjar
 
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowTahunAjar]]:
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowTahunAjar]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        tahun_ajar_all = db.query(models.TahunAjar).filter(models.TahunAjar.deleted_at == None).all()
+        tahun_ajar_all = db.query(modelsTahunAjar).filter(modelsTahunAjar.deleted_at == None).all()
         if tahun_ajar_all:
             response["status"] = True
             response["msg"] = "Data Tahun Ajaran Berhasil Ditemukan"
@@ -20,16 +21,16 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowTahunAjar]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def create(request: schemas.TahunAjar, db: Session) -> Dict[str, Union[bool, str, schemas.ShowTahunAjar]]:
+def create(request: schemasTahunAjar, db: Session) -> Dict[str, Union[bool, str, schemasShowTahunAjar]]:
     response = {"status": False, "msg": "", "data": None}
     try:
-        new_tahun_ajar = models.TahunAjar(** request.dict())
+        new_tahun_ajar = modelsTahunAjar(** request.dict())
         db.add(new_tahun_ajar)
         db.commit()
         db.refresh(new_tahun_ajar)
         response["status"] = True
         response["msg"] = "Data Tahun Ajaran Berhasil di Input"
-        response["data"] = schemas.ShowTahunAjar.from_orm(new_tahun_ajar)
+        response["data"] = schemasShowTahunAjar.from_orm(new_tahun_ajar)
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -38,10 +39,10 @@ def create(request: schemas.TahunAjar, db: Session) -> Dict[str, Union[bool, str
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    tahunajar = db.query(models.TahunAjar).filter(models.TahunAjar.id == id, models.TahunAjar.deleted_at.is_(None))
+    tahunajar = db.query(modelsTahunAjar).filter(modelsTahunAjar.id == id, modelsTahunAjar.deleted_at.is_(None))
     existing_tahunajar = tahunajar.first()
     if not existing_tahunajar:
-        if db.query(models.TahunAjar).filter(models.TahunAjar.id == id).first():
+        if db.query(modelsTahunAjar).filter(modelsTahunAjar.id == id).first():
             response["msg"] = f"Data Tahun Ajaran dengan id {id} sudah dihapus"
             status_code = status.HTTP_400_BAD_REQUEST
         else:
@@ -55,7 +56,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             headers = {"X-Error": response["msg"]}
         )
     try:
-        tahunajar.update({models.TahunAjar.deleted_at: datetime.datetime.now()})
+        tahunajar.update({modelsTahunAjar.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Tahun Ajaran Berhasil di Hapus"
@@ -63,9 +64,9 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def update(id: int, request: schemas.TahunAjar, db: Session) -> Dict[str, Union[bool, str, schemas.ShowTahunAjar]]:
+def update(id: int, request: schemasTahunAjar, db: Session) -> Dict[str, Union[bool, str, schemasShowTahunAjar]]:
     response = {"status": False, "msg": "", "data": None}
-    tahunajar = db.query(models.TahunAjar).filter(models.TahunAjar.id == id)
+    tahunajar = db.query(modelsTahunAjar).filter(modelsTahunAjar.id == id)
     if not tahunajar.first():
         response["msg"] = f"Data Tahun Ajaran dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -89,16 +90,16 @@ def update(id: int, request: schemas.TahunAjar, db: Session) -> Dict[str, Union[
         db.commit()
         response["status"] = True
         response["msg"] = "Data Tahun Ajaran Berhasil di Update"
-        response["data"] = schemas.ShowTahunAjar.from_orm(tahunajar.first())
+        response["data"] = schemasShowTahunAjar.from_orm(tahunajar.first())
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowTahunAjar]]:
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowTahunAjar]]:
     response = {"status": False, "msg": "", "data": None}
-    tahunajar = db.query(models.TahunAjar).filter(models.TahunAjar.id == id).first()
+    tahunajar = db.query(modelsTahunAjar).filter(modelsTahunAjar.id == id).first()
     if not tahunajar:
         response["msg"] = f"Data Tahun Ajaran dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -120,7 +121,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowTahunAj
     try:
         response["status"] = True
         response["msg"] = "Data Tahun Ajar Berhasil Ditemukan"
-        response["data"] = schemas.ShowTahunAjar.from_orm(tahunajar)
+        response["data"] = schemasShowTahunAjar.from_orm(tahunajar)
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

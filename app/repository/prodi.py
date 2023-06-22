@@ -1,15 +1,18 @@
 from sqlalchemy.orm import Session
-import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
+from schemas.prodi import Prodi as schemasProdi, ShowProdi as schemasShowProdi
+from schemas.fakultas import ShowFakultas as schemasShowFakultas
+from models.prodi import Prodi as modelsProdi
+from models.fakultas import Fakultas as modelsFakultas
 
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowProdi]]:
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowProdi]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        prodi_all = db.query(models.Prodi).filter(models.Prodi.deleted_at == None).all()
+        prodi_all = db.query(modelsProdi).filter(modelsProdi.deleted_at == None).all()
         if prodi_all:
             response["status"] = True
             response["msg"] = "Data Prodi Berhasil Ditemukan"
@@ -21,18 +24,18 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowProdi]]:
 
     data_all = []
     for prodi in response["data"]:
-        prodi_data = schemas.ShowProdi.from_orm(prodi)
-        prodi_data.prodis = schemas.ShowFakultas.from_orm(prodi.prodis)
+        prodi_data = schemasShowProdi.from_orm(prodi)
+        prodi_data.prodis = schemasShowFakultas.from_orm(prodi.prodis)
         data_all.append(prodi_data)
     response["data"] = data_all
     return {"detail": [response]}
 
-def create(request: schemas.Prodi, db: Session) -> Dict[str, Union[bool, str, schemas.ShowProdi]]:
+def create(request: schemasProdi, db: Session) -> Dict[str, Union[bool, str, schemasShowProdi]]:
     response = {"status": False, "msg": "", "data": None}
     try:
-        fakultas_exists = db.query(models.Fakultas).filter(
-            models.Fakultas.id_fakultas == request.id_fakultas,
-            models.Fakultas.deleted_at.is_(None)
+        fakultas_exists = db.query(modelsFakultas).filter(
+            modelsFakultas.id_fakultas == request.id_fakultas,
+            modelsFakultas.deleted_at.is_(None)
         ).first()
         if not fakultas_exists:
             response["msg"] = "Data Fakultas tidak tersedia"
@@ -43,7 +46,7 @@ def create(request: schemas.Prodi, db: Session) -> Dict[str, Union[bool, str, sc
                 status_code = status.HTTP_404_NOT_FOUND,
                 headers = {"X-Error": "Data tidak valid" }
             )
-        if db.query(exists().where(and_(models.Prodi.kode_prodi == request.kode_prodi, models.Prodi.deleted_at.is_(None)))).scalar():
+        if db.query(exists().where(and_(modelsProdi.kode_prodi == request.kode_prodi, modelsProdi.deleted_at.is_(None)))).scalar():
             response["msg"] = "Kode Prodi Sudah Ada"
             content = json.dumps({"detail": [response]})
             return Response(
@@ -53,13 +56,13 @@ def create(request: schemas.Prodi, db: Session) -> Dict[str, Union[bool, str, sc
                 headers = {"X-Error": "Data Conflict"}
             )
         else:
-            new_prodi = models.Prodi(** request.dict())
+            new_prodi = modelsProdi(** request.dict())
             db.add(new_prodi)
             db.commit()
             db.refresh(new_prodi)
             response["status"] = True
             response["msg"] = "Data Prodi Berhasil di Input"
-            response["data"] = schemas.ShowProdi.from_orm(new_prodi)
+            response["data"] = schemasShowProdi.from_orm(new_prodi)
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -68,12 +71,12 @@ def create(request: schemas.Prodi, db: Session) -> Dict[str, Union[bool, str, sc
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    prodi = db.query(models.Prodi).filter(models.Prodi.id_prodi == id, models.Prodi.deleted_at.is_(None))
+    prodi = db.query(modelsProdi).filter(modelsProdi.id_prodi == id, modelsProdi.deleted_at.is_(None))
 
     existing_prodi = prodi.first()
     if not existing_prodi:
         # raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = f"Prodi dengan id {id} tidak ditemukan")
-        if db.query(models.Prodi).filter(models.Prodi.id_prodi == id).first():
+        if db.query(modelsProdi).filter(modelsProdi.id_prodi == id).first():
             response["msg"] = f"Data Prodi dengan id {id} sudah dihapus"
             status_code = status.HTTP_400_BAD_REQUEST
         else:
@@ -87,7 +90,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             headers = {"X-Error": response["msg"]}
         )
     try:
-        prodi.update({models.Prodi.deleted_at: datetime.datetime.now()})
+        prodi.update({modelsProdi.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Prodi Berhasil di Hapus"
@@ -95,9 +98,9 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def update(id: int, request: schemas.Prodi, db: Session) -> Dict[str, Union[bool, str, schemas.ShowProdi]]:
+def update(id: int, request: schemasProdi, db: Session) -> Dict[str, Union[bool, str, schemasShowProdi]]:
     response = {"status": False, "msg": "", "data": None}
-    prodi = db.query(models.Prodi).filter(models.Prodi.id_prodi == id)
+    prodi = db.query(modelsProdi).filter(modelsProdi.id_prodi == id)
     if not prodi.first():
         response["msg"] = f"Data Prodi dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -109,9 +112,9 @@ def update(id: int, request: schemas.Prodi, db: Session) -> Dict[str, Union[bool
         )
         
     # Cek id fakultas ada atau tidak
-    fakultas_exists = db.query(models.Fakultas).filter(
-        models.Fakultas.id_fakultas == request.id_fakultas,
-        models.Fakultas.deleted_at.is_(None)
+    fakultas_exists = db.query(modelsFakultas).filter(
+        modelsFakultas.id_fakultas == request.id_fakultas,
+        modelsFakultas.deleted_at.is_(None)
     ).first()
 
     if not fakultas_exists:
@@ -133,10 +136,10 @@ def update(id: int, request: schemas.Prodi, db: Session) -> Dict[str, Union[bool
             headers = {"X-Error": "Data Prodi telah dihapus"}
         )
 
-    existing_prodi = db.query(models.Prodi).filter(
-        models.Prodi.kode_prodi == request.kode_prodi,
-        models.Prodi.deleted_at.is_(None),
-        models.Prodi.id_prodi != id
+    existing_prodi = db.query(modelsProdi).filter(
+        modelsProdi.kode_prodi == request.kode_prodi,
+        modelsProdi.deleted_at.is_(None),
+        modelsProdi.id_prodi != id
     ).first()
 
     if existing_prodi:
@@ -153,16 +156,16 @@ def update(id: int, request: schemas.Prodi, db: Session) -> Dict[str, Union[bool
         db.commit()
         response["status"] = True
         response["msg"] = "Data Prodi Berhasil di Update"
-        response["data"] = schemas.ShowProdi.from_orm(prodi.first())
+        response["data"] = schemasShowProdi.from_orm(prodi.first())
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowProdi]]:
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowProdi]]:
     response = {"status": False, "msg": "", "data": None}
-    prodi = db.query(models.Prodi).filter(models.Prodi.id_prodi == id).first()
+    prodi = db.query(modelsProdi).filter(modelsProdi.id_prodi == id).first()
     if not prodi:
         response["msg"] = f"Data Prodi dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -184,7 +187,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowProdi]]
     try:
         response["status"] = True
         response["msg"] = "Data Prodi Berhasil Ditemukan"
-        response["data"] =  schemas.ShowProdi.from_orm(prodi)
+        response["data"] =  schemasShowProdi.from_orm(prodi)
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

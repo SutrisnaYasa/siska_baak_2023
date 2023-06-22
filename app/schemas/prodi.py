@@ -3,6 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 from datetime import date
 import re
+from schemas.fakultas import ShowFakultas
 
 # Schemas Master Prodi
 class ProdiBase(BaseModel):

@@ -1,8 +1,9 @@
 from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException
-import schemas, database, models
+import database, models
 from sqlalchemy.orm import Session
 from repository import mahasiswa_irs_nilai
+from schemas.mahasiswa_irs_nilai import MahasiswaIrsNilai as schemasMahasiswaIrsNilai, ShowMahasiswaIrsNilai as schemasShowMahasiswaIrsNilai
 
 router = APIRouter(
     prefix = "/mahasiswa_irs_nilai",
@@ -15,7 +16,7 @@ def all(db: Session = Depends(get_db)):
     return mahasiswa_irs_nilai.get_all(db)
 
 @router.post('/', status_code = status.HTTP_201_CREATED)
-def create(request: schemas.MahasiswaIrsNilai, db: Session = Depends(get_db)):
+def create(request: schemasMahasiswaIrsNilai, db: Session = Depends(get_db)):
     return mahasiswa_irs_nilai.create(request, db)
 
 @router.delete('/{id}', status_code = status.HTTP_204_NO_CONTENT)
@@ -23,7 +24,7 @@ def destroy(id: int, db: Session = Depends(get_db)):
     return mahasiswa_irs_nilai.destroy(id, db)
 
 @router.put('/{id}', status_code = status.HTTP_202_ACCEPTED)
-def update(id: int, request: schemas.MahasiswaIrsNilai, db: Session = Depends(get_db)):
+def update(id: int, request: schemasMahasiswaIrsNilai, db: Session = Depends(get_db)):
     return mahasiswa_irs_nilai.update(id, request, db)
 
 @router.get('/{id}', status_code = status.HTTP_200_OK)

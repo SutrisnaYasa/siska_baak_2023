@@ -1,15 +1,18 @@
 from sqlalchemy.orm import Session
-import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
+from schemas.matkul_kelompok import MatkulKelompok as schemasMatkulKelompok, ShowMatkulKelompok as schemasShowMatkulKelompok
+from schemas.dosen import ShowDataDosen as schemasShowDataDosen
+from models.matkul_kelompok import MatkulKelompok as modelsMatkulKelompok
+from models.dosen import Dosen as modelsDosen
 
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulKelompok]]:
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulKelompok]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        matkul_kelompok_all = db.query(models.MatkulKelompok).filter(models.MatkulKelompok.deleted_at == None).all()
+        matkul_kelompok_all = db.query(modelsMatkulKelompok).filter(modelsMatkulKelompok.deleted_at == None).all()
         if matkul_kelompok_all:
             response["status"] = True
             response["msg"] = "Data Matkul Kelompok Berhasil Ditemukan"
@@ -21,18 +24,18 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulKelompo
     
     data_all = []
     for matkul_kelompok in response["data"]:
-        matkul_kelompok_data = schemas.ShowMatkulKelompok.from_orm(matkul_kelompok)
-        matkul_kelompok_data.matkul_klp_dosen = schemas.ShowDataDosen.from_orm(matkul_kelompok.matkul_klp_dosen)
+        matkul_kelompok_data = schemasShowMatkulKelompok.from_orm(matkul_kelompok)
+        matkul_kelompok_data.matkul_klp_dosen = schemasShowDataDosen.from_orm(matkul_kelompok.matkul_klp_dosen)
         data_all.append(matkul_kelompok_data)
     response["data"] = data_all
     return {"detail": [response]}
 
-def create(request: schemas.MatkulKelompok, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulKelompok]]:
+def create(request: schemasMatkulKelompok, db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulKelompok]]:
     response = {"status": False, "msg": "", "data": None}
 
-    dosen_exists = db.query(models.Dosen).filter(
-        models.Dosen.id_dosen == request.id_dosen,
-        models.Dosen.deleted_at.is_(None)
+    dosen_exists = db.query(modelsDosen).filter(
+        modelsDosen.id_dosen == request.id_dosen,
+        modelsDosen.deleted_at.is_(None)
     ).first()
     if not dosen_exists:
         response["msg"] = "Data Dosen tidak tersedia"
@@ -44,13 +47,13 @@ def create(request: schemas.MatkulKelompok, db: Session) -> Dict[str, Union[bool
             headers = {"X-Error": "Data tidak valid"}
         )
     try:
-        new_matkul_kelompok = models.MatkulKelompok(** request.dict())
+        new_matkul_kelompok = modelsMatkulKelompok(** request.dict())
         db.add(new_matkul_kelompok)
         db.commit()
         db.refresh(new_matkul_kelompok)
         response["status"] = True
         response["msg"] = "Data Matkul Kelompok Berhasil di Input"
-        response["data"] = schemas.ShowMatkulKelompok.from_orm(new_matkul_kelompok)
+        response["data"] = schemasShowMatkulKelompok.from_orm(new_matkul_kelompok)
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -59,11 +62,11 @@ def create(request: schemas.MatkulKelompok, db: Session) -> Dict[str, Union[bool
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    matkul_kelompok = db.query(models.MatkulKelompok).filter(models.MatkulKelompok.id == id, models.MatkulKelompok.deleted_at.is_(None))
+    matkul_kelompok = db.query(modelsMatkulKelompok).filter(modelsMatkulKelompok.id == id, modelsMatkulKelompok.deleted_at.is_(None))
     
     existing_matkulkelompok = matkul_kelompok.first()
     if not existing_matkulkelompok:
-        if db.query(models.MatkulKelompok).filter(models.MatkulKelompok.id == id).first():
+        if db.query(modelsMatkulKelompok).filter(modelsMatkulKelompok.id == id).first():
             response["msg"] = f"Data Matkul Kelompok dengan id {id} sudah dihapus"
             status_code = status.HTTP_400_BAD_REQUEST
         else:
@@ -77,7 +80,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             headers = {"X-Error": response["msg"]}
         )
     try:
-        matkul_kelompok.update({models.MatkulKelompok.deleted_at: datetime.datetime.now()})
+        matkul_kelompok.update({modelsMatkulKelompok.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Matkul Kelompok Berhasil di Hapus"
@@ -85,11 +88,11 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def update(id: int, request: schemas.MatkulKelompok, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulKelompok]]:
+def update(id: int, request: schemasMatkulKelompok, db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulKelompok]]:
     response = {"status": False, "msg": "", "data": None}
-    dosen_exists = db.query(models.Dosen).filter(
-        models.Dosen.id_dosen == request.id_dosen,
-        models.Dosen.deleted_at.is_(None)
+    dosen_exists = db.query(modelsDosen).filter(
+        modelsDosen.id_dosen == request.id_dosen,
+        modelsDosen.deleted_at.is_(None)
     ).first()
     if not dosen_exists:
         response["msg"] = "Data Dosen tidak tersedia"
@@ -101,7 +104,7 @@ def update(id: int, request: schemas.MatkulKelompok, db: Session) -> Dict[str, U
             headers = {"X-Error": "Data tidak valid"}
         )
         
-    matkul_kelompok = db.query(models.MatkulKelompok).filter(models.MatkulKelompok.id == id)
+    matkul_kelompok = db.query(modelsMatkulKelompok).filter(modelsMatkulKelompok.id == id)
     if not matkul_kelompok.first():
         response["msg"] = f"Data Matkul Kelompak dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -125,16 +128,16 @@ def update(id: int, request: schemas.MatkulKelompok, db: Session) -> Dict[str, U
         db.commit()
         response["status"] = True
         response["msg"] = "Data Matkul Kelompok Berhasil di Update"
-        response["data"] = schemas.ShowMatkulKelompok.from_orm(matkul_kelompok.first())
+        response["data"] = schemasShowMatkulKelompok.from_orm(matkul_kelompok.first())
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulKelompok]]:
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulKelompok]]:
     response = {"status": False, "msg": "", "data": None}
-    matkul_kelompok = db.query(models.MatkulKelompok).filter(models.MatkulKelompok.id == id).first()
+    matkul_kelompok = db.query(modelsMatkulKelompok).filter(modelsMatkulKelompok.id == id).first()
     if not matkul_kelompok:
         response["msg"] = f"Data Matkul Kelompak dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -156,7 +159,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulK
     try:
         response["status"] = True
         response["msg"] = "Data Matkul Kelompok Berhasil Ditemukan"
-        response["data"] = schemas.ShowMatkulKelompok.from_orm(matkul_kelompok)
+        response["data"] = schemasShowMatkulKelompok.from_orm(matkul_kelompok)
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

@@ -1,15 +1,20 @@
 from sqlalchemy.orm import Session
-import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
+from schemas.matkul_prasyarat_detail import MatkulPrasyaratDetail as schemasMatkulPrasyaratDetail, ShowMatkulPrasyaratDetail as schemasShowMatkulPrasyaratDetail
+from schemas.matkul import ShowDataMatkul as schemasShowDataMatkul
+from schemas.matkul_prasyarat import ShowDataMatkulPrasyarat as schemasShowDataMatkulPrasyarat
+from models.matkul_prasyarat_detail import MatkulPrasyaratDetail as modelsMatkulPrasyaratDetail
+from models.matkul import Matkul as modelsMatkul
+from models.matkul_prasyarat import MatkulPrasyarat as modelsMatkulPrasyarat
 
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulPrasyarat]]:
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulPrasyaratDetail]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        matkul_prasyarat_detail = db.query(models.MatkulPrasyaratDetail).filter(models.MatkulPrasyaratDetail.deleted_at == None).all()
+        matkul_prasyarat_detail = db.query(modelsMatkulPrasyaratDetail).filter(modelsMatkulPrasyaratDetail.deleted_at == None).all()
         if matkul_prasyarat_detail:
             response["status"] = True
             response["msg"] = "Data Matkul Prasyarat Detail Berhasil Ditemukan"
@@ -20,18 +25,18 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulPrasyar
         response["msg"] = str(e)
     data_all = []
     for mkl in response["data"]:
-        mkl_data = schemas.ShowMatkulPrasyaratDetail.from_orm(mkl)
-        mkl_data.mkl_prasyarat_detail = schemas.ShowDataMatkul.from_orm(mkl.mkl_prasyarat_detail)
-        mkl_data.matkul_prasyarat_detail = schemas.ShowMatkulPrasyarat.from_orm(mkl.matkul_prasyarat_detail)
+        mkl_data = schemasShowMatkulPrasyaratDetail.from_orm(mkl)
+        mkl_data.mkl_prasyarat_detail = schemasShowDataMatkul.from_orm(mkl.mkl_prasyarat_detail)
+        mkl_data.matkul_prasyarat_detail = schemasShowDataMatkulPrasyarat.from_orm(mkl.matkul_prasyarat_detail)
         data_all.append(mkl_data)
     response["data"] = data_all
     return {"detail": [response]}
 
-def create(request: schemas.MatkulPrasyaratDetail, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulPrasyaratDetail]]:
+def create(request: schemasMatkulPrasyaratDetail, db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulPrasyaratDetail]]:
     response = {"status": False, "msg": "", "data": None}
-    matkul_exists = db.query(models.Matkul).filter(
-        models.Matkul.id == request.id_syarat,
-        models.Matkul.deleted_at.is_(None)
+    matkul_exists = db.query(modelsMatkul).filter(
+        modelsMatkul.id == request.id_syarat,
+        modelsMatkul.deleted_at.is_(None)
     ).first()
     if not matkul_exists:
         response["msg"] = "Data Matkul tidak tersedia"
@@ -43,9 +48,9 @@ def create(request: schemas.MatkulPrasyaratDetail, db: Session) -> Dict[str, Uni
             headers = {"X-Error": "Data tidak valid"}
         )
     
-    matkul_prasyarat_detail_exists = db.query(models.MatkulPrasyarat).filter(
-        models.MatkulPrasyarat.id == request.id_matkul_prasyarat,
-        models.MatkulPrasyarat.deleted_at.is_(None)
+    matkul_prasyarat_detail_exists = db.query(modelsMatkulPrasyarat).filter(
+        modelsMatkulPrasyarat.id == request.id_matkul_prasyarat,
+        modelsMatkulPrasyarat.deleted_at.is_(None)
     ).first()
     if not matkul_prasyarat_detail_exists:
         response["msg"] = "Data Matkul Prasyarat tidak tersedia"
@@ -58,24 +63,24 @@ def create(request: schemas.MatkulPrasyaratDetail, db: Session) -> Dict[str, Uni
         )
 
     try:
-        new_matkul_prasyarat_detail = models.MatkulPrasyaratDetail(** request.dict())
+        new_matkul_prasyarat_detail = modelsMatkulPrasyaratDetail(** request.dict())
         db.add(new_matkul_prasyarat_detail)
         db.commit()
         db.refresh(new_matkul_prasyarat_detail)
         response["status"] = True
         response["msg"] = "Data Matkul Prasyarat Detail Berhasil di Input"
-        response["data"] = schemas.ShowMatkulPrasyaratDetail.from_orm(new_matkul_prasyarat_detail)
+        response["data"] = schemasShowMatkulPrasyaratDetail.from_orm(new_matkul_prasyarat_detail)
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    matkul_prasyarat_detail = db.query(models.MatkulPrasyaratDetail).filter(models.MatkulPrasyaratDetail.id == id, models.MatkulPrasyaratDetail.deleted_at.is_(None))
+    matkul_prasyarat_detail = db.query(modelsMatkulPrasyaratDetail).filter(modelsMatkulPrasyaratDetail.id == id, modelsMatkulPrasyaratDetail.deleted_at.is_(None))
 
     existing_matkul_prasyarat_detail = matkul_prasyarat_detail.first()
     if not existing_matkul_prasyarat_detail:
-        if db.query(models.MatkulPrasyaratDetail).filter(models.MatkulPrasyaratDetail.id == id).first():
+        if db.query(modelsMatkulPrasyaratDetail).filter(modelsMatkulPrasyaratDetail.id == id).first():
             response["msg"] = f"Data Matkul Prasyarat Detail dengan id {id} sudah dihapus"
             status_code = status.HTTP_400_BAD_REQUEST
         else:
@@ -89,7 +94,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             headers = {"X-Error": response["msg"]}
        )
     try:
-        matkul_prasyarat_detail.update({models.MatkulPrasyaratDetail.deleted_at: datetime.datetime.now()})
+        matkul_prasyarat_detail.update({modelsMatkulPrasyaratDetail.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Matkul Prasyarat Detail Berhasil di Hapus"
@@ -97,11 +102,11 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def update(id: int, request: schemas.MatkulPrasyaratDetail, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulPrasyaratDetail]]:
+def update(id: int, request: schemasMatkulPrasyaratDetail, db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulPrasyaratDetail]]:
     response = {"status": False, "msg": "", "data": None}
-    matkul_exists = db.query(models.Matkul).filter(
-        models.Matkul.id == request.id_syarat,
-        models.Matkul.deleted_at.is_(None)
+    matkul_exists = db.query(modelsMatkul).filter(
+        modelsMatkul.id == request.id_syarat,
+        modelsMatkul.deleted_at.is_(None)
     ).first()
     if not matkul_exists:
         response["msg"] = "Data Matkul tidak tersedia"
@@ -113,9 +118,9 @@ def update(id: int, request: schemas.MatkulPrasyaratDetail, db: Session) -> Dict
             headers = {"X-Error": "Data tidak valid"}
         )
     
-    matkul_prasyarat_detail_exists = db.query(models.MatkulPrasyarat).filter(
-        models.MatkulPrasyarat.id == request.id_matkul_prasyarat,
-        models.MatkulPrasyarat.deleted_at.is_(None)
+    matkul_prasyarat_detail_exists = db.query(modelsMatkulPrasyarat).filter(
+        modelsMatkulPrasyarat.id == request.id_matkul_prasyarat,
+        modelsMatkulPrasyarat.deleted_at.is_(None)
     ).first()
     if not matkul_prasyarat_detail_exists:
         response["msg"] = "Data Matkul Prasyarat tidak tersedia"
@@ -127,7 +132,7 @@ def update(id: int, request: schemas.MatkulPrasyaratDetail, db: Session) -> Dict
             headers = {"X-Error": "Data tidak valid"}
         )
 
-    matkul_prasyarat_detail = db.query(models.MatkulPrasyaratDetail).filter(models.MatkulPrasyaratDetail.id == id)
+    matkul_prasyarat_detail = db.query(modelsMatkulPrasyaratDetail).filter(modelsMatkulPrasyaratDetail.id == id)
     if not matkul_prasyarat_detail.first():
         response["msg"] = f"Data Fakultas dengan id {id} tidak ditemukan"
         content = json.dumps({"detail":[response]})
@@ -157,9 +162,9 @@ def update(id: int, request: schemas.MatkulPrasyaratDetail, db: Session) -> Dict
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulPrasyaratDetail]]:
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulPrasyaratDetail]]:
     response = {"status": False, "msg": "", "data": None}
-    matkul_prasyarat_detail = db.query(models.MatkulPrasyaratDetail).filter(models.MatkulPrasyaratDetail.id == id).first()
+    matkul_prasyarat_detail = db.query(modelsMatkulPrasyaratDetail).filter(modelsMatkulPrasyaratDetail.id == id).first()
     if not matkul_prasyarat_detail:
         response["msg"] = f"Data Fakultas dengan id {id} tidak ditemukan"
         content = json.dumps({"detail":[response]})
@@ -181,7 +186,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMatkulP
     try:
         response["status"] = True
         response["msg"] = "Data Matkul Prasyarat Detail Berhasil Ditemukan"
-        response["data"] = schemas.ShowMatkulPrasyaratDetail.from_orm(matkul_prasyarat_detail)
+        response["data"] = schemasShowMatkulPrasyaratDetail.from_orm(matkul_prasyarat_detail)
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

@@ -3,6 +3,7 @@ from database import Base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
+from models.mhs_trf_nilai_konversi import MhsTrfNilaiKonversi
 
 # Models Mahasiswa Transfer
 class MahasiswaTransfer(Base):

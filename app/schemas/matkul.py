@@ -3,7 +3,9 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 from datetime import date
 import re
-
+from schemas.prodi import ShowDataProdi
+from schemas.kurikulum import ShowDataKurikulum
+from schemas.matkul_kelompok import ShowDataMatkulKelompok
 # Schemas Matkul 
 class MatkulBase(BaseModel):
     kode_matkul: str

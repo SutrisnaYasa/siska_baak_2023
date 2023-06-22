@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException
-import models
-from database import engine
+# import models
+from database import engine, Base
 from routers import user, authentication, fakultas, prodi, ruangan, tahun_ajar, mahasiswa, dosen, kurikulum, matkul_kelompok, matkul, grade, matkul_prasyarat, matkul_prasyarat_detail, dosen_bimbingan_pa, dosen_mengajar, dosen_mengajar_kontrak, mhs_trf_nilai_konversi, mahasiswa_irs, mahasiswa_irs_nilai, dosen_mengajar_jadwal_ujian
 
 app = FastAPI()
 
-models.Base.metadata.create_all(engine)
+# models.Base.metadata.create_all(engine)
+Base.metadata.create_all(engine)
 
 app.include_router(authentication.router)
 app.include_router(user.router)

@@ -1,27 +1,16 @@
 from sqlalchemy.orm import Session
-import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
+from schemas.fakultas import Fakultas as schemasFakultas, ShowFakultas as schemasShowFakultas
+from models.fakultas import Fakultas as modelsFakultas
 
-# def get_all(db: Session) -> Dict[str, any]:
-#     response = {"status": False, "message": "", "data": []}
-#     try:
-#         fakultas_all = db.query(models.Fakultas).all()
-#         response["status"] = True
-#         response["message"] = "Data berhasil ditemukan"
-#         response["data"] = fakultas_all
-#     except Exception as e:
-#         response["message"] = str(e)
-    
-#     return response
-
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowFakultas]]:
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowFakultas]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        fakultas_all = db.query(models.Fakultas).filter(models.Fakultas.deleted_at == None).all()
+        fakultas_all = db.query(modelsFakultas).filter(modelsFakultas.deleted_at == None).all()
         if fakultas_all:
             response["status"] = True
             response["msg"] = "Data Fakultas Berhasil Ditemukan"
@@ -33,12 +22,12 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowFakultas]]:
     
     return {"detail": [response]}
 
-def create(request: schemas.Fakultas, db: Session) -> Dict[str, Union[bool, str, schemas.ShowFakultas]]:
+def create(request: schemasFakultas, db: Session) -> Dict[str, Union[bool, str, schemasShowFakultas]]:
     # new_fakultas = models.Fakultas(kode_fakultas = request.kode_fakultas, nama_fakultas = request.nama_fakultas)
     response = {"status": False, "msg": "", "data": None}
     try:
         # if db.query(exists().where(models.Fakultas.kode_fakultas == request.kode_fakultas)).scalar():
-        if db.query(exists().where(and_(models.Fakultas.kode_fakultas == request.kode_fakultas, models.Fakultas.deleted_at.is_(None)))).scalar():
+        if db.query(exists().where(and_(modelsFakultas.kode_fakultas == request.kode_fakultas, modelsFakultas.deleted_at.is_(None)))).scalar():
             response["msg"] = "Kode Fakultas Sudah Ada"
             content = json.dumps({"detail":[response]})
             return Response(
@@ -48,13 +37,13 @@ def create(request: schemas.Fakultas, db: Session) -> Dict[str, Union[bool, str,
                 headers = {"X-Error": "Data Conflict"}
             )
         else:
-            new_fakultas = models.Fakultas(** request.dict())
+            new_fakultas = modelsFakultas(** request.dict())
             db.add(new_fakultas)
             db.commit()
             db.refresh(new_fakultas)
             response["status"] = True
             response["msg"] = "Data Fakultas Berhasil di Input"
-            response["data"] = schemas.ShowFakultas.from_orm(new_fakultas)
+            response["data"] = schemasShowFakultas.from_orm(new_fakultas)
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -63,11 +52,11 @@ def create(request: schemas.Fakultas, db: Session) -> Dict[str, Union[bool, str,
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    fakultas = db.query(models.Fakultas).filter(models.Fakultas.id_fakultas == id, models.Fakultas.deleted_at.is_(None))
+    fakultas = db.query(modelsFakultas).filter(modelsFakultas.id_fakultas == id, modelsFakultas.deleted_at.is_(None))
 
     existing_fakultas = fakultas.first()
     if not existing_fakultas:
-        if db.query(models.Fakultas).filter(models.Fakultas.id_fakultas == id).first():
+        if db.query(modelsFakultas).filter(modelsFakultas.id_fakultas == id).first():
             response["msg"] = f"Data Fakultas dengan id {id} sudah dihapus"
             status_code = status.HTTP_400_BAD_REQUEST
         else:
@@ -84,7 +73,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     try:
         #fakultas.delete(synchronize_session = False)
         # Mengatur deleted_at dengan nilai waktu saat ini
-        fakultas.update({models.Fakultas.deleted_at: datetime.datetime.now()})
+        fakultas.update({modelsFakultas.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = f"Data Fakultas Berhasil di Hapus"
@@ -92,10 +81,10 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def update(id: int, request: schemas.Fakultas, db: Session) -> Dict[str, Union[bool, str, schemas.ShowFakultas]]:
+def update(id: int, request: schemasFakultas, db: Session) -> Dict[str, Union[bool, str, schemasShowFakultas]]:
     response = {"status": False, "msg": "", "data": None}
 
-    fakultas = db.query(models.Fakultas).filter(models.Fakultas.id_fakultas == id)
+    fakultas = db.query(modelsFakultas).filter(modelsFakultas.id_fakultas == id)
     if not fakultas.first():
         response["msg"] = f"Data Fakultas dengan id {id} tidak ditemukan"
         content = json.dumps({"detail":[response]})
@@ -115,10 +104,10 @@ def update(id: int, request: schemas.Fakultas, db: Session) -> Dict[str, Union[b
             status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Fakultas telah dihapus"}
         )
-    existing_fakultas = db.query(models.Fakultas).filter(
-        models.Fakultas.kode_fakultas == request.kode_fakultas,
-        models.Fakultas.deleted_at.is_(None),
-        models.Fakultas.id_fakultas != id
+    existing_fakultas = db.query(modelsFakultas).filter(
+        modelsFakultas.kode_fakultas == request.kode_fakultas,
+        modelsFakultas.deleted_at.is_(None),
+        modelsFakultas.id_fakultas != id
     ).first()
     
     if existing_fakultas:
@@ -135,17 +124,17 @@ def update(id: int, request: schemas.Fakultas, db: Session) -> Dict[str, Union[b
         db.commit()
         response["status"] = True
         response["msg"] = "Data Fakultas Berhasil di Update"
-        response["data"] = schemas.ShowFakultas.from_orm(fakultas.first())
+        response["data"] = schemasShowFakultas.from_orm(fakultas.first())
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowFakultas]]:
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowFakultas]]:
     response = {"status": False, "msg": "", "data": None}
 
-    fakultas = db.query(models.Fakultas).filter(models.Fakultas.id_fakultas == id).first()
+    fakultas = db.query(modelsFakultas).filter(modelsFakultas.id_fakultas == id).first()
     if not fakultas:
         response["msg"] = f"Data Fakultas dengan id {id} tidak ditemukan"
         content = json.dumps({"detail":[response]})
@@ -167,7 +156,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowFakulta
     try:
         response["status"] = True
         response["msg"] = "Data Fakultas Berhasil Ditemukan"
-        response["data"] = schemas.ShowFakultas.from_orm(fakultas)
+        response["data"] = schemasShowFakultas.from_orm(fakultas)
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

@@ -3,6 +3,9 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 from datetime import date
 import re
+from schemas.mahasiswa_alamat import ShowMahasiswaAlamat
+from schemas.mahasiswa_ortu import ShowMahasiswaOrtu
+from schemas.mahasiswa_transfer import ShowMahasiswaTransfer
 
 # Schemas Mahasiswa
 class MahasiswaBase(BaseModel):
@@ -79,3 +82,11 @@ class ShowMahasiswa(BaseModel):
     class Config:
         orm_mode = True
 # End Schemas Mahasiswa
+
+# Schemas Show Mahasiswa All
+class ShowMahasiswaAll(BaseModel):
+    tabel1 : ShowMahasiswa
+    tabel2 : ShowMahasiswaAlamat
+    tabel3 : ShowMahasiswaOrtu
+    tabel4 : ShowMahasiswaTransfer
+# End Schemas Show Mahasiswa All

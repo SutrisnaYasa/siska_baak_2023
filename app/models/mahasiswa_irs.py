@@ -3,6 +3,9 @@ from database import Base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
+from models.mahasiswa import Mahasiswa
+from models.grade import Grade
+from models.mahasiswa_irs_nilai import MahasiswaIrsNilai
 
 # Models Mahasiswa IRS
 class MahasiswaIrs(Base):

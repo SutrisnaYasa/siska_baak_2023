@@ -3,6 +3,10 @@ from database import Base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
+from models.dosen_alamat import DosenAlamat
+from models.dosen_riwayat_studi import DosenRiwayatStudi
+from models.dosen_jabfung import DosenJabfung
+from models.matkul_kelompok import MatkulKelompok
 
 # Models Dosen
 class Dosen(Base):

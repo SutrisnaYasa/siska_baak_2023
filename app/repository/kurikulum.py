@@ -1,15 +1,18 @@
 from sqlalchemy.orm import Session
-import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
+from schemas.kurikulum import Kurikulum as schemasKurikulum, ShowKurikulum as schemasShowKurikulum
+from schemas.prodi import ShowDataProdi as schemasShowDataProdi
+from models.kurikulum import Kurikulum as modelsKurikulum
+from models.prodi import Prodi as modelsProdi
 
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikulum]]:
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowKurikulum]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        kurikulum_all = db.query(models.Kurikulum).filter(models.Kurikulum.deleted_at == None).all()
+        kurikulum_all = db.query(modelsKurikulum).filter(modelsKurikulum.deleted_at == None).all()
         if kurikulum_all:
             response["status"] = True
             response["msg"] = "Data Kurikulum Berhasil Ditemukan"
@@ -21,18 +24,18 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikulum]]:
         
     data_all = []
     for kurikulum in response["data"]:
-        kurikulum_data = schemas.ShowKurikulum.from_orm(kurikulum)
-        kurikulum_data.kurikulums = schemas.ShowDataProdi.from_orm(kurikulum.kurikulums)
+        kurikulum_data = schemasShowKurikulum.from_orm(kurikulum)
+        kurikulum_data.kurikulums = schemasShowDataProdi.from_orm(kurikulum.kurikulums)
         data_all.append(kurikulum_data)
     response["data"] = data_all
     return {"detail": [response]}
 
-def create(request: schemas.Kurikulum, db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikulum]]:
+def create(request: schemasKurikulum, db: Session) -> Dict[str, Union[bool, str, schemasShowKurikulum]]:
     response = {"status": False, "msg": "", "data": None}
 
-    prodi_exists = db.query(models.Prodi).filter(
-        models.Prodi.id_prodi == request.id_prodi,
-        models.Prodi.deleted_at.is_(None)
+    prodi_exists = db.query(modelsProdi).filter(
+        modelsProdi.id_prodi == request.id_prodi,
+        modelsProdi.deleted_at.is_(None)
     ).first()
     if not prodi_exists:
         response["msg"] = "Data Prodi tidak tersedia"
@@ -44,13 +47,13 @@ def create(request: schemas.Kurikulum, db: Session) -> Dict[str, Union[bool, str
             headers = {"X-Error": "Data tidak valid"}
         )
     try:
-        new_kurikulum = models.Kurikulum(** request.dict())
+        new_kurikulum = modelsKurikulum(** request.dict())
         db.add(new_kurikulum)
         db.commit()
         db.refresh(new_kurikulum)
         response["status"] = True
         response["msg"] = "Data Kurikulum Berhasil di Input"
-        response["data"] = schemas.ShowKurikulum.from_orm(new_kurikulum)
+        response["data"] = schemasShowKurikulum.from_orm(new_kurikulum)
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -59,11 +62,11 @@ def create(request: schemas.Kurikulum, db: Session) -> Dict[str, Union[bool, str
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    kurikulum = db.query(models.Kurikulum).filter(models.Kurikulum.id == id, models.Kurikulum.deleted_at.is_(None))
+    kurikulum = db.query(modelsKurikulum).filter(modelsKurikulum.id == id, modelsKurikulum.deleted_at.is_(None))
 
     existing_kurikulum = kurikulum.first()
     if not existing_kurikulum:
-        if db.query(models.Kurikulum).filter(models.Kurikulum.id == id).first():
+        if db.query(modelsKurikulum).filter(modelsKurikulum.id == id).first():
             response["msg"] = f"Data Kurikulum dengan id {id} sudah dihapus"
             status_code = status.HTTP_400_BAD_REQUEST
         else:
@@ -77,7 +80,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             headers = {"X-Error": response["msg"]}
         )
     try:
-        kurikulum.update({models.Kurikulum.deleted_at: datetime.datetime.now()})
+        kurikulum.update({modelsKurikulum.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Kurikulum Berhasil di Hapus"
@@ -85,11 +88,11 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def update(id: int, request: schemas.Kurikulum, db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikulum]]:
+def update(id: int, request: schemasKurikulum, db: Session) -> Dict[str, Union[bool, str, schemasShowKurikulum]]:
     response = {"status": False, "msg": "", "data": None}
-    prodi_exists = db.query(models.Prodi).filter(
-        models.Prodi.id_prodi == request.id_prodi,
-        models.Prodi.deleted_at.is_(None)
+    prodi_exists = db.query(modelsProdi).filter(
+        modelsProdi.id_prodi == request.id_prodi,
+        modelsProdi.deleted_at.is_(None)
     ).first()
     if not prodi_exists:
         response["msg"] = "Data Prodi tidak tersedia"
@@ -101,7 +104,7 @@ def update(id: int, request: schemas.Kurikulum, db: Session) -> Dict[str, Union[
             headers = {"X-Error": "Data tidak valid"}
         )
         
-    kurikulum = db.query(models.Kurikulum).filter(models.Kurikulum.id == id)
+    kurikulum = db.query(modelsKurikulum).filter(modelsKurikulum.id == id)
     if not kurikulum.first():
         response["msg"] = f"Data Kurikulum dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -125,16 +128,16 @@ def update(id: int, request: schemas.Kurikulum, db: Session) -> Dict[str, Union[
         db.commit()
         response["status"] = True
         response["msg"] = "Data Kurikulum Berhasil di Update"
-        response["data"] = schemas.ShowKurikulum.from_orm(kurikulum.first())
+        response["data"] = schemasShowKurikulum.from_orm(kurikulum.first())
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikulum]]:
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowKurikulum]]:
     response = {"status": False, "msg": "", "data": None}
-    kurikulum = db.query(models.Kurikulum).filter(models.Kurikulum.id == id).first()
+    kurikulum = db.query(modelsKurikulum).filter(modelsKurikulum.id == id).first()
     if not kurikulum:
         response["msg"] = f"Data Kurikulum dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -156,7 +159,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowKurikul
     try:
         response["status"] = True
         response["msg"] = "Data Kurikulum Berhasil Ditemukan"
-        response["data"] = schemas.ShowKurikulum.from_orm(kurikulum)
+        response["data"] = schemasShowKurikulum.from_orm(kurikulum)
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

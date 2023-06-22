@@ -3,6 +3,9 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 from datetime import date
 import re
+from schemas.dosen_alamat import ShowDosenAlamat 
+from schemas.dosen_riwayat_studi import ShowDosenRiwayatStudi 
+from schemas.dosen_jabfung import ShowDosenJabfung 
 
 # Shcemas Dosen
 class DosenBase(BaseModel):
@@ -75,3 +78,20 @@ class ShowDosen(BaseModel):
     class Config():
         orm_mode = True
 # End Dosen Schemas
+
+# Schemas Show Dosen All
+class ShowDosenAll(BaseModel):
+    tabel1 : ShowDosen
+    tabel2 : ShowDosenAlamat
+    tabel3 : ShowDosenRiwayatStudi
+    tabel4 : ShowDosenJabfung
+# End Schemas Show Dosen All
+
+class ShowDataDosen(BaseModel):
+    id_dosen: int
+    kode_dosen: str
+    nidk: str
+    nidn: str
+    nama: str
+    class Config():
+        orm_mode = True

@@ -1,15 +1,18 @@
 from sqlalchemy.orm import Session
-import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
+from schemas.dosen_mengajar_jadwal_ujian import DosenMengajarJadwalUjian as schemasDosenMengajarJadwalUjian, ShowDosenMengajarJadwalUjian as schemasShowDosenMengajarJadwalUjian
+from models.dosen_mengajar_jadwal_ujian import DosenMengajarJadwalUjian as modelsDosenMengajarJadwalUjian
+from models.dosen_mengajar import DosenMengajar as modelsDosenMengajar
+from models.ruangan import Ruangan as modelsRuangan
 
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMengajarJadwalUjian]]:
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMengajarJadwalUjian]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        dosen_mengajar_jadwal_ujian_all = db.query(models.DosenMengajarJadwalUjian).filter(models.DosenMengajarJadwalUjian.deleted_at == None).all()
+        dosen_mengajar_jadwal_ujian_all = db.query(modelsDosenMengajarJadwalUjian).filter(modelsDosenMengajarJadwalUjian.deleted_at == None).all()
         if dosen_mengajar_jadwal_ujian_all:
             response["status"] = True
             response["msg"] = "Data Jadwal Ujian Dosen Mengajar Berhasil Ditemukan"
@@ -20,11 +23,11 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMengajar
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def create(request: schemas.DosenMengajarJadwalUjian, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMengajarJadwalUjian]]:
+def create(request: schemasDosenMengajarJadwalUjian, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMengajarJadwalUjian]]:
     response = {"status": False, "msg": "", "data": None}
-    dosen_mengajar_exists = db.query(models.DosenMengajar).filter(
-        models.DosenMengajar.id == request.id_dosen_mengajar,
-        models.DosenMengajar.deleted_at.is_(None)
+    dosen_mengajar_exists = db.query(modelsDosenMengajar).filter(
+        modelsDosenMengajar.id == request.id_dosen_mengajar,
+        modelsDosenMengajar.deleted_at.is_(None)
     ).first()
     if not dosen_mengajar_exists:
         response["msg"] = "Data Mengajar Dosen tidak tersedia"
@@ -35,9 +38,9 @@ def create(request: schemas.DosenMengajarJadwalUjian, db: Session) -> Dict[str, 
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data tidak valid"}
         )
-    ruangan_exists = db.query(models.Ruangan).filter(
-        models.Ruangan.id == request.id_ruangan,
-        models.Ruangan.deleted_at.is_(None)
+    ruangan_exists = db.query(modelsRuangan).filter(
+        modelsRuangan.id == request.id_ruangan,
+        modelsRuangan.deleted_at.is_(None)
     ).first()
     if not ruangan_exists:
         response["msg"] = "Data Ruangan tidak tersedia"
@@ -49,13 +52,13 @@ def create(request: schemas.DosenMengajarJadwalUjian, db: Session) -> Dict[str, 
             headers = {"X-Error": "Data tidak valid"}
         )
     try:
-        new_dosen_mengajar_jadwal_ujian = models.DosenMengajarJadwalUjian(** request.dict())
+        new_dosen_mengajar_jadwal_ujian = modelsDosenMengajarJadwalUjian(** request.dict())
         db.add(new_dosen_mengajar_jadwal_ujian)
         db.commit()
         db.refresh(new_dosen_mengajar_jadwal_ujian)
         response["status"] = True
         response["msg"] = "Data Jadwal Ujian Dosen Mengajar Berhasil di Input"
-        response["data"] = schemas.ShowDosenMengajarJadwalUjian.from_orm(new_dosen_mengajar_jadwal_ujian)
+        response["data"] = schemasShowDosenMengajarJadwalUjian.from_orm(new_dosen_mengajar_jadwal_ujian)
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -64,11 +67,11 @@ def create(request: schemas.DosenMengajarJadwalUjian, db: Session) -> Dict[str, 
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    dosen_mengajar_jadwal_ujian = db.query(models.DosenMengajarJadwalUjian).filter(models.DosenMengajarJadwalUjian.id == id, models.DosenMengajarJadwalUjian.deleted_at.is_(None))
+    dosen_mengajar_jadwal_ujian = db.query(modelsDosenMengajarJadwalUjian).filter(modelsDosenMengajarJadwalUjian.id == id, modelsDosenMengajarJadwalUjian.deleted_at.is_(None))
 
     existing_dosen_mengajar_jadwal_ujian = dosen_mengajar_jadwal_ujian.first()
     if not existing_dosen_mengajar_jadwal_ujian:
-        if db.query(models.DosenMengajarJadwalUjian).filter(models.DosenMengajarJadwalUjian.id == id).first():
+        if db.query(modelsDosenMengajarJadwalUjian).filter(modelsDosenMengajarJadwalUjian.id == id).first():
             response["msg"] = f"Data Jadwal Ujian Dosen Mengajar dengan id {id} sudah dihapus"
             status_code = status.HTTP_400_BAD_REQUEST
         else:
@@ -82,7 +85,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             headers = {"X-Error": response["msg"]}
        )
     try:
-        dosen_mengajar_jadwal_ujian.update({models.DosenMengajarJadwalUjian.deleted_at: datetime.datetime.now()})
+        dosen_mengajar_jadwal_ujian.update({modelsDosenMengajarJadwalUjian.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Jadwal Ujian Dosen Mengajar Berhasil di Hapus"
@@ -90,11 +93,11 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def update(id: int, request: schemas.DosenMengajarJadwalUjian, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMengajarJadwalUjian]]:
+def update(id: int, request: schemasDosenMengajarJadwalUjian, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMengajarJadwalUjian]]:
     response = {"status": False, "msg": "", "data": None}
-    dosen_mengajar_exists = db.query(models.DosenMengajar).filter(
-        models.DosenMengajar.id == request.id_dosen_mengajar,
-        models.DosenMengajar.deleted_at.is_(None)
+    dosen_mengajar_exists = db.query(modelsDosenMengajar).filter(
+        modelsDosenMengajar.id == request.id_dosen_mengajar,
+        modelsDosenMengajar.deleted_at.is_(None)
     ).first()
     if not dosen_mengajar_exists:
         response["msg"] = "Data Mengajar Dosen tidak tersedia"
@@ -105,9 +108,9 @@ def update(id: int, request: schemas.DosenMengajarJadwalUjian, db: Session) -> D
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data tidak valid"}
         )
-    ruangan_exists = db.query(models.Ruangan).filter(
-        models.Ruangan.id == request.id_ruangan,
-        models.Ruangan.deleted_at.is_(None)
+    ruangan_exists = db.query(modelsRuangan).filter(
+        modelsRuangan.id == request.id_ruangan,
+        modelsRuangan.deleted_at.is_(None)
     ).first()
     if not ruangan_exists:
         response["msg"] = "Data Ruangan tidak tersedia"
@@ -120,7 +123,7 @@ def update(id: int, request: schemas.DosenMengajarJadwalUjian, db: Session) -> D
         )
 
 
-    dosen_mengajar_jadwal_ujian = db.query(models.DosenMengajarJadwalUjian).filter(models.DosenMengajarJadwalUjian.id == id)
+    dosen_mengajar_jadwal_ujian = db.query(modelsDosenMengajarJadwalUjian).filter(modelsDosenMengajarJadwalUjian.id == id)
     if not dosen_mengajar_jadwal_ujian.first():
         response["msg"] = f"Data Jadwal Ujian Dosen Mengajar dengan id {id} tidak ditemukan"
         content = json.dumps({"detail":[response]})
@@ -144,16 +147,16 @@ def update(id: int, request: schemas.DosenMengajarJadwalUjian, db: Session) -> D
         db.commit()
         response["status"] = True
         response["msg"] = "Data Jadwal Ujian Dosen Mengajar Berhasil di Update"
-        response["data"] = schemas.ShowDosenMengajarJadwalUjian.from_orm(dosen_mengajar_jadwal_ujian.first())
+        response["data"] = schemasShowDosenMengajarJadwalUjian.from_orm(dosen_mengajar_jadwal_ujian.first())
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMengajarJadwalUjian]]:
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMengajarJadwalUjian]]:
     response = {"status": False, "msg": "", "data": None}
-    dosen_mengajar_jadwal_ujian = db.query(models.DosenMengajarJadwalUjian).filter(models.DosenMengajarJadwalUjian.id == id).first()
+    dosen_mengajar_jadwal_ujian = db.query(modelsDosenMengajarJadwalUjian).filter(modelsDosenMengajarJadwalUjian.id == id).first()
     if not dosen_mengajar_jadwal_ujian:
         response["msg"] = f"Data Jadwal Ujian Dosen Mengajar dengan id {id} tidak ditemukan"
         content = json.dumps({"detail":[response]})
@@ -175,7 +178,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenMe
     try:
         response["status"] = True
         response["msg"] = "Data Jadwal Ujian Dosen Mengajar Berhasil Ditemukan"
-        response["data"] = schemas.ShowDosenMengajarJadwalUjian.from_orm(dosen_mengajar_jadwal_ujian)
+        response["data"] = schemasShowDosenMengajarJadwalUjian.from_orm(dosen_mengajar_jadwal_ujian)
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

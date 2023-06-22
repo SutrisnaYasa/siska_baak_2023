@@ -3,6 +3,7 @@ from database import Base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
+from models.prodi import Prodi
 
 # Models Master Fakultas
 class Fakultas(Base):

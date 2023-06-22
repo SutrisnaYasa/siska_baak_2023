@@ -1,15 +1,18 @@
 from sqlalchemy.orm import Session
-import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
+from schemas.mhs_trf_nilai_konversi import MhsTrfNilaiKonversi as schemasMhsTrfNilaiKonversi, ShowMhsTrfNilaiKonversi as schemasShowMhsTrfNilaiKonversi
+from models.mhs_trf_nilai_konversi import MhsTrfNilaiKonversi as modelsMhsTrfNilaiKonversi
+from models.matkul import Matkul as modelsMatkul
+from models.mahasiswa_transfer import MahasiswaTransfer as modelsMahasiswaTransfer
 
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMhsTrfNilaiKonversi]]:
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNilaiKonversi]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        mhs_trf_nilai_konversi_all = db.query(models.MhsTrfNilaiKonversi).filter(models.MhsTrfNilaiKonversi.deleted_at == None).all()
+        mhs_trf_nilai_konversi_all = db.query(modelsMhsTrfNilaiKonversi).filter(modelsMhsTrfNilaiKonversi.deleted_at == None).all()
         if mhs_trf_nilai_konversi_all:
             response["status"] = True
             response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Berhasil Ditemukan"
@@ -20,11 +23,11 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMhsTrfNilaiKo
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def create(request: schemas.MhsTrfNilaiKonversi, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMhsTrfNilaiKonversi]]:
+def create(request: schemasMhsTrfNilaiKonversi, db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNilaiKonversi]]:
     response = {"status": False, "msg": "", "data": None}
-    matkul_exists = db.query(models.Matkul).filter(
-        models.Matkul.id == request.id_matkul,
-        models.Matkul.deleted_at.is_(None)
+    matkul_exists = db.query(modelsMatkul).filter(
+        modelsMatkul.id == request.id_matkul,
+        modelsMatkul.deleted_at.is_(None)
     ).first()
     if not matkul_exists:
         response["msg"] = "Data Matkul tidak tersedia"
@@ -35,9 +38,9 @@ def create(request: schemas.MhsTrfNilaiKonversi, db: Session) -> Dict[str, Union
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data tidak valid"}
         )
-    mhs_trf_exists = db.query(models.MahasiswaTransfer).filter(
-        models.MahasiswaTransfer.id_mhs_transfer == request.id_mahasiswa_transfer,
-        models.MahasiswaTransfer.deleted_at.is_(None)
+    mhs_trf_exists = db.query(modelsMahasiswaTransfer).filter(
+        modelsMahasiswaTransfer.id_mhs_transfer == request.id_mahasiswa_transfer,
+        modelsMahasiswaTransfer.deleted_at.is_(None)
     ).first()
     if not mhs_trf_exists:
         response["msg"] = "Data Mahasiswa Transfer tidak tersedia"
@@ -49,13 +52,13 @@ def create(request: schemas.MhsTrfNilaiKonversi, db: Session) -> Dict[str, Union
             headers = {"X-Error": "Data tidak valid"}
         )
     try:
-        new_mhs_trf_nilai_konversi = models.MhsTrfNilaiKonversi(** request.dict())
+        new_mhs_trf_nilai_konversi = modelsMhsTrfNilaiKonversi(** request.dict())
         db.add(new_mhs_trf_nilai_konversi)
         db.commit()
         db.refresh(new_mhs_trf_nilai_konversi)
         response["status"] = True
         response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Berhasil di Input"
-        response["data"] = schemas.ShowMhsTrfNilaiKonversi.from_orm(new_mhs_trf_nilai_konversi)
+        response["data"] = schemasShowMhsTrfNilaiKonversi.from_orm(new_mhs_trf_nilai_konversi)
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -64,11 +67,11 @@ def create(request: schemas.MhsTrfNilaiKonversi, db: Session) -> Dict[str, Union
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    mhs_trf_nilai_konversi = db.query(models.MhsTrfNilaiKonversi).filter(models.MhsTrfNilaiKonversi.id == id, models.MhsTrfNilaiKonversi.deleted_at.is_(None))
+    mhs_trf_nilai_konversi = db.query(modelsMhsTrfNilaiKonversi).filter(modelsMhsTrfNilaiKonversi.id == id, modelsMhsTrfNilaiKonversi.deleted_at.is_(None))
 
     existing_mhs_trf_nilai_konversi = mhs_trf_nilai_konversi.first()
     if not existing_mhs_trf_nilai_konversi:
-        if db.query(models.MhsTrfNilaiKonversi).filter(models.MhsTrfNilaiKonversi.id == id).first():
+        if db.query(modelsMhsTrfNilaiKonversi).filter(modelsMhsTrfNilaiKonversi.id == id).first():
             response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} sudah dihapus"
             status_code = status.HTTP_400_BAD_REQUEST
         else:
@@ -82,7 +85,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             headers = {"X-Error": response["msg"]}
         )
     try:
-        mhs_trf_nilai_konversi.update({models.MhsTrfNilaiKonversi.deleted_at: datetime.datetime.now()})
+        mhs_trf_nilai_konversi.update({modelsMhsTrfNilaiKonversi.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Berhasil di Hapus"
@@ -90,12 +93,12 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def update(id: int, request: schemas.MhsTrfNilaiKonversi, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMhsTrfNilaiKonversi]]:
+def update(id: int, request: schemasMhsTrfNilaiKonversi, db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNilaiKonversi]]:
     response = {"status": False, "msg": "", "data": None}
     
-    matkul_exists = db.query(models.Matkul).filter(
-        models.Matkul.id == request.id_matkul,
-        models.Matkul.deleted_at.is_(None)
+    matkul_exists = db.query(modelsMatkul).filter(
+        modelsMatkul.id == request.id_matkul,
+        modelsMatkul.deleted_at.is_(None)
     ).first()
     if not matkul_exists:
         response["msg"] = "Data Matkul tidak tersedia"
@@ -106,9 +109,9 @@ def update(id: int, request: schemas.MhsTrfNilaiKonversi, db: Session) -> Dict[s
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data tidak valid"}
         )
-    mhs_trf_exists = db.query(models.MahasiswaTransfer).filter(
-        models.MahasiswaTransfer.id_mhs_transfer == request.id_mahasiswa_transfer,
-        models.MahasiswaTransfer.deleted_at.is_(None)
+    mhs_trf_exists = db.query(modelsMahasiswaTransfer).filter(
+        modelsMahasiswaTransfer.id_mhs_transfer == request.id_mahasiswa_transfer,
+        modelsMahasiswaTransfer.deleted_at.is_(None)
     ).first()
     if not mhs_trf_exists:
         response["msg"] = "Data Mahasiswa Transfer tidak tersedia"
@@ -120,7 +123,7 @@ def update(id: int, request: schemas.MhsTrfNilaiKonversi, db: Session) -> Dict[s
             headers = {"X-Error": "Data tidak valid"}
         )
 
-    mhs_trf_nilai_konversi = db.query(models.MhsTrfNilaiKonversi).filter(models.MhsTrfNilaiKonversi.id == id)
+    mhs_trf_nilai_konversi = db.query(modelsMhsTrfNilaiKonversi).filter(modelsMhsTrfNilaiKonversi.id == id)
     if not mhs_trf_nilai_konversi.first():
         response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} tidak ditemukan"
         content = json.dumps({"detail":[response]})
@@ -144,16 +147,16 @@ def update(id: int, request: schemas.MhsTrfNilaiKonversi, db: Session) -> Dict[s
         db.commit()
         response["status"] = True
         response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Berhasil di Update"
-        response["data"] = schemas.ShowMhsTrfNilaiKonversi.from_orm(mhs_trf_nilai_konversi.first())
+        response["data"] = schemasShowMhsTrfNilaiKonversi.from_orm(mhs_trf_nilai_konversi.first())
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMhsTrfNilaiKonversi]]:
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNilaiKonversi]]:
     response = {"status": False, "msg": "", "data": None} 
-    mhs_trf_nilai_konversi = db.query(models.MhsTrfNilaiKonversi).filter(models.MhsTrfNilaiKonversi.id == id).first()
+    mhs_trf_nilai_konversi = db.query(modelsMhsTrfNilaiKonversi).filter(modelsMhsTrfNilaiKonversi.id == id).first()
     if not mhs_trf_nilai_konversi:
         response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} tidak ditemukan"
         content = json.dumps({"detail":[response]})
@@ -175,7 +178,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMhsTrfN
     try:
         response["status"] = True
         response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Berhasil Ditemukan"
-        response["data"] = schemas.ShowMhsTrfNilaiKonversi.from_orm(mhs_trf_nilai_konversi)
+        response["data"] = schemasShowMhsTrfNilaiKonversi.from_orm(mhs_trf_nilai_konversi)
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

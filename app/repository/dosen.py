@@ -1,39 +1,47 @@
 from sqlalchemy.orm import Session
-import models, schemas
 from fastapi import HTTPException, status, Response
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
+from schemas.dosen import Dosen as schemasDosen, ShowDosen as schemasShowDosen, ShowDosenAll as schemasShowDosenAll
+from schemas.dosen_alamat import DosenAlamat as schemasDosenAlamat, ShowDosenAlamat as schemasShowDosenAlamat
+from schemas.dosen_riwayat_studi import DosenRiwayatStudi as schemasDosenRiwayatStudi, ShowDosenRiwayatStudi as schemasShowDosenRiwayatStudi
+from schemas.dosen_jabfung import DosenJabfung as schemasDosenJabfung, ShowDosenJabfung as schemasShowDosenJabfung
+from models.dosen import Dosen as modelsDosen
+from models.dosen_alamat import DosenAlamat as modelsDosenAlamat
+from models.dosen_riwayat_studi import DosenRiwayatStudi as modelsDosenRiwayatStudi
+from models.dosen_jabfung import DosenJabfung as modelsDosenJabfung
+from models.prodi import Prodi as modelsProdi
 
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenAll]]:
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowDosenAll]]:
     response = {"status": False, "msg": "", "data": []}
     try:
         dosen = db.query(
-            models.Dosen, 
-            models.DosenAlamat, 
-            models.DosenRiwayatStudi, 
-            models.DosenJabfung
+            modelsDosen, 
+            modelsDosenAlamat, 
+            modelsDosenRiwayatStudi, 
+            modelsDosenJabfung
         ).join(
-            models.DosenAlamat, 
-            models.Dosen.id_dosen == models.DosenAlamat.id_dosen
+            modelsDosenAlamat, 
+            modelsDosen.id_dosen == modelsDosenAlamat.id_dosen
         ).join(
-            models.DosenRiwayatStudi, 
-            models.Dosen.id_dosen == models.DosenRiwayatStudi.id_dosen
+            modelsDosenRiwayatStudi, 
+            modelsDosen.id_dosen == modelsDosenRiwayatStudi.id_dosen
         ).join(
-            models.DosenJabfung, 
-            models.Dosen.id_dosen == models.DosenJabfung.id_dosen
+            modelsDosenJabfung, 
+            modelsDosen.id_dosen == modelsDosenJabfung.id_dosen
         ).filter(
-            models.Dosen.deleted_at.is_(None),
-            models.DosenAlamat.deleted_at.is_(None),
-            models.DosenRiwayatStudi.deleted_at.is_(None),
-            models.DosenJabfung.deleted_at.is_(None)
+            modelsDosen.deleted_at.is_(None),
+            modelsDosenAlamat.deleted_at.is_(None),
+            modelsDosenRiwayatStudi.deleted_at.is_(None),
+            modelsDosenJabfung.deleted_at.is_(None)
         ).all()
 
         result = []
         for tabel1, tabel2, tabel3, tabel4 in dosen:
-            result.append(schemas.ShowDosenAll(
+            result.append(schemasShowDosenAll(
                 tabel1 = tabel1, tabel2 = tabel2, tabel3 = tabel3, tabel4 = tabel4
             ))
         if dosen:
@@ -46,12 +54,12 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenAll]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def create(table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga: schemas.DosenRiwayatStudi, table_empat: schemas.DosenJabfung, db: Session) -> Dict[str, Union[bool, str]]:
+def create(table_satu: schemasDosen, table_dua: schemasDosenAlamat, table_tiga: schemasDosenRiwayatStudi, table_empat: schemasDosenJabfung, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
     try:
-        prodi_exists = db.query(models.Prodi).filter(
-            models.Prodi.id_prodi == table_satu.id_prodi,
-            models.Prodi.deleted_at.is_(None)
+        prodi_exists = db.query(modelsProdi).filter(
+            modelsProdi.id_prodi == table_satu.id_prodi,
+            modelsProdi.deleted_at.is_(None)
         ).first()
         if not prodi_exists:
             response["msg"] = "Data Prodi tidak tersedia"
@@ -63,9 +71,9 @@ def create(table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga
                 headers = {"X-Error": "Data tidak valid"}
             )
 
-        existing_dosen = db.query(models.Dosen).filter(
-            models.Dosen.kode_dosen == table_satu.kode_dosen,
-            models.Dosen.deleted_at.is_(None)
+        existing_dosen = db.query(modelsDosen).filter(
+            modelsDosen.kode_dosen == table_satu.kode_dosen,
+            modelsDosen.deleted_at.is_(None)
         ).first()
         if existing_dosen:
             response["msg"] = "Kode Dosen Sudah Ada"
@@ -77,19 +85,19 @@ def create(table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga
                 headers = {"X-Error": "Data Conflict"}
             )
         else:
-            new_data1 = models.Dosen(** table_satu.dict())
+            new_data1 = modelsDosen(** table_satu.dict())
             db.add(new_data1)
             db.flush()
 
-            new_data2 = models.DosenAlamat(** table_dua.dict())
+            new_data2 = modelsDosenAlamat(** table_dua.dict())
             new_data2.id_dosen = new_data1.id_dosen
             db.add(new_data2)
 
-            new_data3 = models.DosenRiwayatStudi(** table_tiga.dict())
+            new_data3 = modelsDosenRiwayatStudi(** table_tiga.dict())
             new_data3.id_dosen = new_data1.id_dosen
             db.add(new_data3)
 
-            new_data4 = models.DosenJabfung(** table_empat.dict())
+            new_data4 = modelsDosenJabfung(** table_empat.dict())
             new_data4.id_dosen = new_data1.id_dosen
             db.add(new_data4)
 
@@ -109,7 +117,7 @@ def create(table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    dosen = db.query(models.Dosen).filter(models.Dosen.id_dosen == id).first()
+    dosen = db.query(modelsDosen).filter(modelsDosen.id_dosen == id).first()
     if not dosen:
         response["msg"] = f"Data Dosen dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -129,13 +137,13 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             headers = {"X-Error": "Data Dosen sudah dihapus"}
         )
     try:
-        db.query(models.Dosen).filter(models.Dosen.id_dosen == id).update({models.Dosen.deleted_at: datetime.datetime.now()})
+        db.query(modelsDosen).filter(modelsDosen.id_dosen == id).update({modelsDosen.deleted_at: datetime.datetime.now()})
 
-        db.query(models.DosenAlamat).filter(models.DosenAlamat.id_dosen == id).update({models.DosenAlamat.deleted_at: datetime.datetime.now()})
+        db.query(modelsDosenAlamat).filter(modelsDosenAlamat.id_dosen == id).update({modelsDosenAlamat.deleted_at: datetime.datetime.now()})
 
-        db.query(models.DosenRiwayatStudi).filter(models.DosenRiwayatStudi.id_dosen == id).update({models.DosenRiwayatStudi.deleted_at: datetime.datetime.now()})
+        db.query(modelsDosenRiwayatStudi).filter(modelsDosenRiwayatStudi.id_dosen == id).update({modelsDosenRiwayatStudi.deleted_at: datetime.datetime.now()})
 
-        db.query(models.DosenJabfung).filter(models.DosenJabfung.id_dosen == id).update({models.DosenJabfung.deleted_at: datetime.datetime.now()})
+        db.query(modelsDosenJabfung).filter(modelsDosenJabfung.id_dosen == id).update({modelsDosenJabfung.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Dosen Berhasil di Hapus"
@@ -143,12 +151,12 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def update(id: int, table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga: schemas.DosenRiwayatStudi, table_empat: schemas.DosenJabfung, db: Session) -> Dict[str, Union[bool, str]]:
+def update(id: int, table_satu: schemasDosen, table_dua: schemasDosenAlamat, table_tiga: schemasDosenRiwayatStudi, table_empat: schemasDosenJabfung, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
 
-    prodi_exists = db.query(models.Prodi).filter(
-        models.Prodi.id_prodi == table_satu.id_prodi,
-        models.Prodi.deleted_at.is_(None)
+    prodi_exists = db.query(modelsProdi).filter(
+        modelsProdi.id_prodi == table_satu.id_prodi,
+        modelsProdi.deleted_at.is_(None)
     ).first()
     if not prodi_exists:
         response["msg"] = "Data Prodi tidak tersedia"
@@ -160,7 +168,7 @@ def update(id: int, table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, t
             headers = {"X-Error": "Data tidak valid"}
         )
 
-    dosen = db.query(models.Dosen).filter(models.Dosen.id_dosen == id).first()
+    dosen = db.query(modelsDosen).filter(modelsDosen.id_dosen == id).first()
     if not dosen:
         response["msg"] = f"Data Dosen dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -180,9 +188,9 @@ def update(id: int, table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, t
             headers = {"X-Error": "Data Dosen sudah dihapus"}
         )
     try:
-        existing_dosen = db.query(models.Dosen).filter(
-            models.Dosen.kode_dosen == table_satu.kode_dosen,
-            models.Dosen.deleted_at.is_(None)
+        existing_dosen = db.query(modelsDosen).filter(
+            modelsDosen.kode_dosen == table_satu.kode_dosen,
+            modelsDosen.deleted_at.is_(None)
         ).first()
         if existing_dosen and existing_dosen.id_dosen != id:
             response["msg"] = "Kode Dosen Sudah Ada"
@@ -193,10 +201,10 @@ def update(id: int, table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, t
                 status_code = status.HTTP_409_CONFLICT,
                 headers = {"X-Error": "Data Conflict"}
             )
-        db.query(models.Dosen).filter(models.Dosen.id_dosen == id).update(table_satu.dict())
-        db.query(models.DosenAlamat).filter(models.DosenAlamat.id_dosen == id).update(table_dua.dict())
-        db.query(models.DosenRiwayatStudi).filter(models.DosenRiwayatStudi.id_dosen == id).update(table_tiga.dict())
-        db.query(models.DosenJabfung).filter(models.DosenJabfung.id_dosen == id).update(table_empat.dict())
+        db.query(modelsDosen).filter(modelsDosen.id_dosen == id).update(table_satu.dict())
+        db.query(modelsDosenAlamat).filter(modelsDosenAlamat.id_dosen == id).update(table_dua.dict())
+        db.query(modelsDosenRiwayatStudi).filter(modelsDosenRiwayatStudi.id_dosen == id).update(table_tiga.dict())
+        db.query(modelsDosenJabfung).filter(modelsDosenJabfung.id_dosen == id).update(table_empat.dict())
         
         db.commit()
         response["status"] = True
@@ -212,13 +220,13 @@ def update(id: int, table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, t
         response["msg"] = str(ex)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenAll]]:
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenAll]]:
     response = {"status": False, "msg": "", "data": None}
-    dosen = db.query(models.Dosen, models.DosenAlamat, models.DosenRiwayatStudi, models.DosenJabfung).\
-    join(models.DosenAlamat, models.Dosen.id_dosen == models.DosenAlamat.id_dosen).\
-    join(models.DosenRiwayatStudi, models.Dosen.id_dosen == models.DosenRiwayatStudi.id_dosen).\
-    join(models.DosenJabfung, models.Dosen.id_dosen == models.DosenJabfung.id_dosen).\
-    filter(models.Dosen.id_dosen == id).\
+    dosen = db.query(modelsDosen, modelsDosenAlamat, modelsDosenRiwayatStudi, modelsDosenJabfung).\
+    join(modelsDosenAlamat, modelsDosen.id_dosen == modelsDosenAlamat.id_dosen).\
+    join(modelsDosenRiwayatStudi, modelsDosen.id_dosen == modelsDosenRiwayatStudi.id_dosen).\
+    join(modelsDosenJabfung, modelsDosen.id_dosen == modelsDosenJabfung.id_dosen).\
+    filter(modelsDosen.id_dosen == id).\
     first()
     if not dosen:
         response["msg"] = f"Data Dosen dengan id {id} tidak ditemukan"
@@ -238,7 +246,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowDosenAl
             status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Dosen sudah dihapus"}
         )
-    result = schemas.ShowDosenAll(
+    result = schemasShowDosenAll(
         tabel1 = dosen[0],
         tabel2 = dosen[1],
         tabel3 = dosen[2],

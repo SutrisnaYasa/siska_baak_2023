@@ -1,15 +1,17 @@
 from sqlalchemy.orm import Session
-import models, schemas
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
+from schemas.mahasiswa_irs_nilai import MahasiswaIrsNilai as schemasMahasiswaIrsNilai, ShowMahasiswaIrsNilai as schemasShowMahasiswaIrsNilai
+from models.mahasiswa_irs_nilai import MahasiswaIrsNilai as modelsMahasiswaIrsNilai
+from models.mahasiswa_irs import MahasiswaIrs as modelsMahasiswaIrs
 
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaIrsNilai]]:
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrsNilai]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        mahasiswa_irs_nilai_all = db.query(models.MahasiswaIrsNilai).filter(models.MahasiswaIrsNilai.deleted_at == None).all()
+        mahasiswa_irs_nilai_all = db.query(modelsMahasiswaIrsNilai).filter(modelsMahasiswaIrsNilai.deleted_at == None).all()
         if mahasiswa_irs_nilai_all:
             response["status"] = True
             response["msg"] = "Data Nilai IRS Mahasiswa Berhasil Ditemukan"
@@ -20,11 +22,11 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaIrsN
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def create(request: schemas.MahasiswaIrsNilai, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaIrsNilai]]:
+def create(request: schemasMahasiswaIrsNilai, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrsNilai]]:
     response = {"status": False, "msg": "", "data": None}
-    mhs_irs_exists = db.query(models.MahasiswaIrs).filter(
-        models.MahasiswaIrs.id == request.id_mahasiswa_irs,
-        models.MahasiswaIrs.deleted_at.is_(None)
+    mhs_irs_exists = db.query(modelsMahasiswaIrs).filter(
+        modelsMahasiswaIrs.id == request.id_mahasiswa_irs,
+        modelsMahasiswaIrs.deleted_at.is_(None)
     ).first()
     if not mhs_irs_exists:
         response["msg"] = "Data IRS Mahasiswa tidak tersedia"
@@ -36,13 +38,13 @@ def create(request: schemas.MahasiswaIrsNilai, db: Session) -> Dict[str, Union[b
             headers = {"X-Error": "Data tidak valid"}
         )
     try:
-        new_mahasiswa_irs_nilai = models.MahasiswaIrsNilai(** request.dict())
+        new_mahasiswa_irs_nilai = modelsMahasiswaIrsNilai(** request.dict())
         db.add(new_mahasiswa_irs_nilai)
         db.commit()
         db.refresh(new_mahasiswa_irs_nilai)
         response["status"] = True
         response["msg"] = "Data Nilai IRS Mahasiswa Berhasil di Input"
-        response["data"] = schemas.ShowMahasiswaIrsNilai.from_orm(new_mahasiswa_irs_nilai)
+        response["data"] = schemasShowMahasiswaIrsNilai.from_orm(new_mahasiswa_irs_nilai)
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -51,11 +53,11 @@ def create(request: schemas.MahasiswaIrsNilai, db: Session) -> Dict[str, Union[b
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    mahasiswa_irs_nilai = db.query(models.MahasiswaIrsNilai).filter(models.MahasiswaIrsNilai.id == id, models.MahasiswaIrsNilai.deleted_at.is_(None))
+    mahasiswa_irs_nilai = db.query(modelsMahasiswaIrsNilai).filter(modelsMahasiswaIrsNilai.id == id, modelsMahasiswaIrsNilai.deleted_at.is_(None))
 
     existing_mhs_irs_nilai = mahasiswa_irs_nilai.first()
     if not existing_mhs_irs_nilai:
-        if db.query(models.MahasiswaIrsNilai).filter(models.MahasiswaIrsNilai.id == id).first():
+        if db.query(modelsMahasiswaIrsNilai).filter(modelsMahasiswaIrsNilai.id == id).first():
             response["msg"] = f"Data Nilai IRS Mahasiswa dengan id {id} sudah dihapus"
             status_code = status.HTTP_400_BAD_REQUEST
         else:
@@ -69,7 +71,7 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             headers = {"X-Error": response["msg"]}
        )
     try:
-        mahasiswa_irs_nilai.update({models.MahasiswaIrsNilai.deleted_at: datetime.datetime.now()})
+        mahasiswa_irs_nilai.update({modelsMahasiswaIrsNilai.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Nilai IRS Mahasiswa Berhasil di Hapus"
@@ -77,11 +79,11 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def update(id: int, request: schemas.MahasiswaIrsNilai, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaIrsNilai]]:
+def update(id: int, request: schemasMahasiswaIrsNilai, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrsNilai]]:
     response = {"status": False, "msg": "", "data": None}
-    mhs_irs_exists = db.query(models.MahasiswaIrs).filter(
-        models.MahasiswaIrs.id == request.id_mahasiswa_irs,
-        models.MahasiswaIrs.deleted_at.is_(None)
+    mhs_irs_exists = db.query(modelsMahasiswaIrs).filter(
+        modelsMahasiswaIrs.id == request.id_mahasiswa_irs,
+        modelsMahasiswaIrs.deleted_at.is_(None)
     ).first()
     if not mhs_irs_exists:
         response["msg"] = "Data IRS Mahasiswa tidak tersedia"
@@ -93,7 +95,7 @@ def update(id: int, request: schemas.MahasiswaIrsNilai, db: Session) -> Dict[str
             headers = {"X-Error": "Data tidak valid"}
         )
 
-    mahasiswa_irs_nilai = db.query(models.MahasiswaIrsNilai).filter(models.MahasiswaIrsNilai.id == id)
+    mahasiswa_irs_nilai = db.query(modelsMahasiswaIrsNilai).filter(modelsMahasiswaIrsNilai.id == id)
     if not mahasiswa_irs_nilai.first():
         response["msg"] = f"Data Nilai IRS Mahasiswa dengan id {id} tidak ditemukan"
         content = json.dumps({"detail":[response]})
@@ -117,16 +119,16 @@ def update(id: int, request: schemas.MahasiswaIrsNilai, db: Session) -> Dict[str
         db.commit()
         response["status"] = True
         response["msg"] = "Data Nilai IRS Mahasiswa Berhasil di Update"
-        response["data"] = schemas.ShowMahasiswaIrsNilai.from_orm(mahasiswa_irs_nilai.first())
+        response["data"] = schemasShowMahasiswaIrsNilai.from_orm(mahasiswa_irs_nilai.first())
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaIrsNilai]]:
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrsNilai]]:
     response = {"status": False, "msg": "", "data": None}
-    mahasiswa_irs_nilai = db.query(models.MahasiswaIrsNilai).filter(models.MahasiswaIrsNilai.id == id).first()
+    mahasiswa_irs_nilai = db.query(modelsMahasiswaIrsNilai).filter(modelsMahasiswaIrsNilai.id == id).first()
     if not mahasiswa_irs_nilai:
         response["msg"] = f"Data Nilai IRS Mahasiswa dengan id {id} tidak ditemukan"
         content = json.dumps({"detail":[response]})
@@ -148,7 +150,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasis
     try:
         response["status"] = True
         response["msg"] = "Data IRS Mahasiswa Berhasil Ditemukan"
-        response["data"] = schemas.ShowMahasiswaIrsNilai.from_orm(mahasiswa_irs_nilai)
+        response["data"] = schemasShowMahasiswaIrsNilai.from_orm(mahasiswa_irs_nilai)
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

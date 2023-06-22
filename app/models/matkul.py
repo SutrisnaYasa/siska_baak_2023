@@ -3,6 +3,10 @@ from database import Base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
+from models.kurikulum import Kurikulum
+from models.matkul_prasyarat import MatkulPrasyarat
+from models.matkul_prasyarat_detail import MatkulPrasyaratDetail
+from models.dosen_mengajar import DosenMengajar
 
 # Models Matkul
 class Matkul(Base):

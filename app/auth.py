@@ -4,6 +4,7 @@ from jose import jwt
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException
+from schemas.user import User as schemasUser, ShowUser as schemasShowUser
 
 JWT_SECRET = "unsersecretkey"
 ALGORITMA = "HS256"
@@ -17,7 +18,7 @@ def create_password_hash(password):
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-def create_access_token(user: schemas.User):
+def create_access_token(user: schemasUser):
     claims = {
         "sub": user.username,
         "role": user.role,

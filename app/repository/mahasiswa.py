@@ -1,39 +1,47 @@
 from sqlalchemy.orm import Session
-import models, schemas
 from fastapi import HTTPException, status, Response
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
+from schemas.mahasiswa import Mahasiswa as schemasMahasiswa, ShowMahasiswa as schemasShowMahasiswa, ShowMahasiswaAll as schemasShowMahasiswaAll
+from schemas.mahasiswa_alamat import MahasiswaAlamat as schemasMahasiswaAlamat, ShowMahasiswaAlamat as schemasShowMahasiswaAlamat
+from schemas.mahasiswa_ortu import MahasiswaOrtu as schemasMahasiswaOrtu, ShowMahasiswaOrtu as schemasShowMahasiswaOrtu
+from schemas.mahasiswa_transfer import MahasiswaTransfer as schemasMahasiswaTransfer, ShowMahasiswaTransfer as schemasShowMahasiswaTransfer
+from models.mahasiswa import Mahasiswa as modelsMahasiswa
+from models.mahasiswa_alamat import MahasiswaAlamat as modelsMahasiswaAlamat
+from models.mahasiswa_ortu import MahasiswaOrtu as modelsMahasiswaOrtu
+from models.mahasiswa_transfer import MahasiswaTransfer as modelsMahasiswaTransfer
+from models.prodi import Prodi as modelsProdi
 
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaAll]]:
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaAll]]:
     response = {"status": False, "msg": "", "data": []}
     try:
         mahasiswa = db.query(
-            models.Mahasiswa, 
-            models.MahasiswaAlamat, 
-            models.MahasiswaOrtu, 
-            models.MahasiswaTransfer
+            modelsMahasiswa, 
+            modelsMahasiswaAlamat, 
+            modelsMahasiswaOrtu, 
+            modelsMahasiswaTransfer
         ).join(
-            models.MahasiswaAlamat, 
-            models.Mahasiswa.id_mahasiswa == models.MahasiswaAlamat.id_mahasiswa
+            modelsMahasiswaAlamat, 
+            modelsMahasiswa.id_mahasiswa == modelsMahasiswaAlamat.id_mahasiswa
         ).join(
-            models.MahasiswaOrtu, 
-            models.Mahasiswa.id_mahasiswa == models.MahasiswaOrtu.id_mahasiswa
+            modelsMahasiswaOrtu, 
+            modelsMahasiswa.id_mahasiswa == modelsMahasiswaOrtu.id_mahasiswa
         ).join(
-            models.MahasiswaTransfer, 
-            models.Mahasiswa.id_mahasiswa == models.MahasiswaTransfer.id_mahasiswa
+            modelsMahasiswaTransfer, 
+            modelsMahasiswa.id_mahasiswa == modelsMahasiswaTransfer.id_mahasiswa
         ).filter(
-            models.Mahasiswa.deleted_at.is_(None),
-            models.MahasiswaAlamat.deleted_at.is_(None),
-            models.MahasiswaOrtu.deleted_at.is_(None),
-            models.MahasiswaTransfer.deleted_at.is_(None)
+            modelsMahasiswa.deleted_at.is_(None),
+            modelsMahasiswaAlamat.deleted_at.is_(None),
+            modelsMahasiswaOrtu.deleted_at.is_(None),
+            modelsMahasiswaTransfer.deleted_at.is_(None)
         ).all()
 
         result = []
         for tabel1, tabel2, tabel3, tabel4 in mahasiswa:
-            result.append(schemas.ShowMahasiswaAll(
+            result.append(schemasShowMahasiswaAll(
                 tabel1 = tabel1, tabel2 = tabel2, tabel3 = tabel3, tabel4 = tabel4
             ))
         if mahasiswa:
@@ -46,12 +54,12 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaAll]
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def create(table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaAlamat, table_tiga: schemas.MahasiswaOrtu, table_empat: schemas.MahasiswaTransfer, db: Session) -> Dict[str, Union[bool, str]]:
+def create(table_satu: schemasMahasiswa, table_dua: schemasMahasiswaAlamat, table_tiga: schemasMahasiswaOrtu, table_empat: schemasMahasiswaTransfer, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
     try:
-        prodi_exists = db.query(models.Prodi).filter(
-            models.Prodi.id_prodi == table_satu.id_prodi,
-            models.Prodi.deleted_at.is_(None)
+        prodi_exists = db.query(modelsProdi).filter(
+            modelsProdi.id_prodi == table_satu.id_prodi,
+            modelsProdi.deleted_at.is_(None)
         ).first()
         if not prodi_exists:
             response["msg"] = "Data Prodi tidak tersedia"
@@ -63,9 +71,9 @@ def create(table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaAlamat, ta
                 headers = {"X-Error": "Data tidak valid"}
             )
 
-        existing_mahasiswa = db.query(models.Mahasiswa).filter(
-            models.Mahasiswa.nim == table_satu.nim,
-            models.Mahasiswa.deleted_at.is_(None)
+        existing_mahasiswa = db.query(modelsMahasiswa).filter(
+            modelsMahasiswa.nim == table_satu.nim,
+            modelsMahasiswa.deleted_at.is_(None)
         ).first()
         if existing_mahasiswa:
             response["msg"] = "Nim Sudah Ada"
@@ -77,19 +85,19 @@ def create(table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaAlamat, ta
                 headers = {"X-Error": "Data Conflict"}
             )
         else:
-            new_data1 = models.Mahasiswa(** table_satu.dict())
+            new_data1 = modelsMahasiswa(** table_satu.dict())
             db.add(new_data1)
             db.flush()
             
-            new_data2 = models.MahasiswaAlamat(** table_dua.dict())
+            new_data2 = modelsMahasiswaAlamat(** table_dua.dict())
             new_data2.id_mahasiswa = new_data1.id_mahasiswa
             db.add(new_data2)
 
-            new_data3 = models.MahasiswaOrtu(** table_tiga.dict())
+            new_data3 = modelsMahasiswaOrtu(** table_tiga.dict())
             new_data3.id_mahasiswa = new_data1.id_mahasiswa
             db.add(new_data3)
 
-            new_data4 = models.MahasiswaTransfer(** table_empat.dict())
+            new_data4 = modelsMahasiswaTransfer(** table_empat.dict())
             new_data4.id_mahasiswa = new_data1.id_mahasiswa
             db.add(new_data4)
 
@@ -109,7 +117,7 @@ def create(table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaAlamat, ta
 
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
-    mahasiswa = db.query(models.Mahasiswa).filter(models.Mahasiswa.id_mahasiswa == id).first()
+    mahasiswa = db.query(modelsMahasiswa).filter(modelsMahasiswa.id_mahasiswa == id).first()
     if not mahasiswa:
         response["msg"] = f"Data Mahasiswa dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -130,16 +138,16 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         )
     try:
         # Set deleted_at field for Mahasiswa
-        db.query(models.Mahasiswa).filter(models.Mahasiswa.id_mahasiswa == id).update({models.Mahasiswa.deleted_at: datetime.datetime.now()})
+        db.query(modelsMahasiswa).filter(modelsMahasiswa.id_mahasiswa == id).update({modelsMahasiswa.deleted_at: datetime.datetime.now()})
         
         # Set deleted_at field for MahasiswaAlamat
-        db.query(models.MahasiswaAlamat).filter(models.MahasiswaAlamat.id_mahasiswa == id).update({models.MahasiswaAlamat.deleted_at: datetime.datetime.now()})
+        db.query(modelsMahasiswaAlamat).filter(modelsMahasiswaAlamat.id_mahasiswa == id).update({modelsMahasiswaAlamat.deleted_at: datetime.datetime.now()})
         
         # Set deleted_at field for MahasiswaOrtu
-        db.query(models.MahasiswaOrtu).filter(models.MahasiswaOrtu.id_mahasiswa == id).update({models.MahasiswaOrtu.deleted_at: datetime.datetime.now()})
+        db.query(modelsMahasiswaOrtu).filter(modelsMahasiswaOrtu.id_mahasiswa == id).update({modelsMahasiswaOrtu.deleted_at: datetime.datetime.now()})
         
         # Set deleted_at field for MahasiswaTransfer
-        db.query(models.MahasiswaTransfer).filter(models.MahasiswaTransfer.id_mahasiswa == id).update({models.MahasiswaTransfer.deleted_at: datetime.datetime.now()})
+        db.query(modelsMahasiswaTransfer).filter(modelsMahasiswaTransfer.id_mahasiswa == id).update({modelsMahasiswaTransfer.deleted_at: datetime.datetime.now()})
         
         db.commit()
         response["status"] = True
@@ -148,12 +156,12 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def update(id: int, table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaAlamat, table_tiga: schemas.MahasiswaOrtu, table_empat: schemas.MahasiswaTransfer, db: Session) -> Dict[str, Union[bool, str]]:
+def update(id: int, table_satu: schemasMahasiswa, table_dua: schemasMahasiswaAlamat, table_tiga: schemasMahasiswaOrtu, table_empat: schemasMahasiswaTransfer, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
 
-    prodi_exists = db.query(models.Prodi).filter(
-        models.Prodi.id_prodi == table_satu.id_prodi,
-        models.Prodi.deleted_at.is_(None)
+    prodi_exists = db.query(modelsProdi).filter(
+        modelsProdi.id_prodi == table_satu.id_prodi,
+        modelsProdi.deleted_at.is_(None)
     ).first()
     if not prodi_exists:
         response["msg"] = "Data Prodi tidak tersedia"
@@ -164,7 +172,7 @@ def update(id: int, table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaA
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data tidak valid"}
         )
-    mahasiswa = db.query(models.Mahasiswa).filter(models.Mahasiswa.id_mahasiswa == id).first()
+    mahasiswa = db.query(modelsMahasiswa).filter(modelsMahasiswa.id_mahasiswa == id).first()
     if not mahasiswa:
         response["msg"] = f"Data Mahasiswa dengan id {id} tidak ditemukan"
         content = json.dumps({"detail": [response]})
@@ -184,9 +192,9 @@ def update(id: int, table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaA
             headers = {"X-Error": "Data Mahasiswa sudah dihapus"}
         )
     try:
-        existing_mahasiswa = db.query(models.Mahasiswa).filter(
-            models.Mahasiswa.nim == table_satu.nim,
-            models.Mahasiswa.deleted_at.is_(None)
+        existing_mahasiswa = db.query(modelsMahasiswa).filter(
+            modelsMahasiswa.nim == table_satu.nim,
+            modelsMahasiswa.deleted_at.is_(None)
         ).first()
         if existing_mahasiswa and existing_mahasiswa.id_mahasiswa != id:
             response["msg"] = "Nim Sudah Ada"
@@ -197,10 +205,10 @@ def update(id: int, table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaA
                 status_code = status.HTTP_409_CONFLICT,
                 headers = {"X-Error": "Data Conflict"}
             )
-        db.query(models.Mahasiswa).filter(models.Mahasiswa.id_mahasiswa == id ).update(table_satu.dict())
-        db.query(models.MahasiswaAlamat).filter(models.MahasiswaAlamat.id_mahasiswa == id).update(table_dua.dict())
-        db.query(models.MahasiswaOrtu).filter(models.MahasiswaOrtu.id_mahasiswa == id).update(table_tiga.dict())
-        db.query(models.MahasiswaTransfer).filter(models.MahasiswaTransfer.id_mahasiswa == id).update(table_empat.dict())
+        db.query(modelsMahasiswa).filter(modelsMahasiswa.id_mahasiswa == id ).update(table_satu.dict())
+        db.query(modelsMahasiswaAlamat).filter(modelsMahasiswaAlamat.id_mahasiswa == id).update(table_dua.dict())
+        db.query(modelsMahasiswaOrtu).filter(modelsMahasiswaOrtu.id_mahasiswa == id).update(table_tiga.dict())
+        db.query(modelsMahasiswaTransfer).filter(modelsMahasiswaTransfer.id_mahasiswa == id).update(table_empat.dict())
 
         db.commit()
         response["status"] = True
@@ -216,13 +224,13 @@ def update(id: int, table_satu: schemas.Mahasiswa, table_dua: schemas.MahasiswaA
         response["msg"] = str(ex)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasiswaAll]]:
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaAll]]:
     response = {"status": False, "msg": "", "data": None}
-    mahasiswa = db.query(models.Mahasiswa, models.MahasiswaAlamat, models.MahasiswaOrtu, models.MahasiswaTransfer).\
-    join(models.MahasiswaAlamat, models.Mahasiswa.id_mahasiswa == models.MahasiswaAlamat.id_mahasiswa).\
-    join(models.MahasiswaOrtu, models.Mahasiswa.id_mahasiswa == models.MahasiswaOrtu.id_mahasiswa).\
-    join(models.MahasiswaTransfer, models.Mahasiswa.id_mahasiswa == models.MahasiswaTransfer.id_mahasiswa).\
-    filter(models.Mahasiswa.id_mahasiswa == id).\
+    mahasiswa = db.query(modelsMahasiswa, modelsMahasiswaAlamat, modelsMahasiswaOrtu, modelsMahasiswaTransfer).\
+    join(modelsMahasiswaAlamat, modelsMahasiswa.id_mahasiswa == modelsMahasiswaAlamat.id_mahasiswa).\
+    join(modelsMahasiswaOrtu, modelsMahasiswa.id_mahasiswa == modelsMahasiswaOrtu.id_mahasiswa).\
+    join(modelsMahasiswaTransfer, modelsMahasiswa.id_mahasiswa == modelsMahasiswaTransfer.id_mahasiswa).\
+    filter(modelsMahasiswa.id_mahasiswa == id).\
     first()
     if not mahasiswa:
         response["msg"] = f"Data Mahasiswa dengan id {id} tidak ditemukan"
@@ -242,7 +250,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemas.ShowMahasis
             status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Mahasiswa sudah dihapus"}
         )
-    result = schemas.ShowMahasiswaAll(
+    result = schemasShowMahasiswaAll(
         tabel1 = mahasiswa[0],
         tabel2 = mahasiswa[1],
         tabel3 = mahasiswa[2],

@@ -3,6 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 from datetime import date
 import re
+from schemas.dosen import ShowDataDosen
 
 # Schemas Matkul Kelompok
 class MatkulKelompokBase(BaseModel):

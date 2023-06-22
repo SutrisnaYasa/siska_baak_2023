@@ -3,6 +3,7 @@ from database import Base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
+from models.mahasiswa_irs import MahasiswaIrs
 
 # Models Master Tahun Ajar
 class TahunAjar(Base):

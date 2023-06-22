@@ -1,8 +1,12 @@
 from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException
-import schemas, database, models
+import database, models
 from sqlalchemy.orm import Session
 from repository import dosen
+from schemas.dosen import Dosen as schemasDosen, ShowDosen as schemasShowDosen, ShowDosenAll as schemasShowDosenAll
+from schemas.dosen_alamat import DosenAlamat as schemasDosenAlamat, ShowDosenAlamat as schemasShowDosenAlamat
+from schemas.dosen_riwayat_studi import DosenRiwayatStudi as schemasDosenRiwayatStudi, ShowDosenRiwayatStudi as schemasShowDosenRiwayatStudi
+from schemas.dosen_jabfung import DosenJabfung as schemasDosenJabfung, ShowDosenJabfung as schemasShowDosenJabfung
 
 router = APIRouter(
     prefix = "/dosen",
@@ -16,7 +20,7 @@ def all(db: Session = Depends(get_db)):
     return data
 
 @router.post('/', status_code = status.HTTP_201_CREATED)
-def create(table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga: schemas.DosenRiwayatStudi, table_empat: schemas.DosenJabfung, db: Session = Depends(get_db)):
+def create(table_satu: schemasDosen, table_dua: schemasDosenAlamat, table_tiga: schemasDosenRiwayatStudi, table_empat: schemasDosenJabfung, db: Session = Depends(get_db)):
     return dosen.create(table_satu, table_dua, table_tiga, table_empat, db)
 
 @router.delete('/{id}', status_code = status.HTTP_204_NO_CONTENT)
@@ -24,7 +28,7 @@ def destroy(id: int, db: Session = Depends(get_db)):
     return dosen.destroy(id, db)
 
 @router.put('/{id}', status_code = status.HTTP_202_ACCEPTED)
-def update(id: int, table_satu: schemas.Dosen, table_dua: schemas.DosenAlamat, table_tiga: schemas.DosenRiwayatStudi, table_empat: schemas.DosenJabfung, db: Session = Depends(get_db)):
+def update(id: int, table_satu: schemasDosen, table_dua: schemasDosenAlamat, table_tiga: schemasDosenRiwayatStudi, table_empat: schemasDosenJabfung, db: Session = Depends(get_db)):
     return dosen.update(id, table_satu, table_dua, table_tiga, table_empat, db)
 
 @router.get('/{id}', status_code = status.HTTP_200_OK)
