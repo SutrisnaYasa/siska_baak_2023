@@ -5,7 +5,7 @@ from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
-from schemas.dosen import Dosen as schemasDosen, ShowDosen as schemasShowDosen, ShowDosenAll as schemasShowDosenAll
+from schemas.dosen import Dosen as schemasDosen, ShowDosen as schemasShowDosen, ShowDosenAll as schemasShowDosenAll, StatusAktif
 from schemas.dosen_alamat import DosenAlamat as schemasDosenAlamat, ShowDosenAlamat as schemasShowDosenAlamat
 from schemas.dosen_riwayat_studi import DosenRiwayatStudi as schemasDosenRiwayatStudi, ShowDosenRiwayatStudi as schemasShowDosenRiwayatStudi
 from schemas.dosen_jabfung import DosenJabfung as schemasDosenJabfung, ShowDosenJabfung as schemasShowDosenJabfung
@@ -41,8 +41,13 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowDosenAll]]:
 
         result = []
         for tabel1, tabel2, tabel3, tabel4 in dosen:
+            status_aktif_name = StatusAktif(tabel1.status_aktif).name
             result.append(schemasShowDosenAll(
-                tabel1 = tabel1, tabel2 = tabel2, tabel3 = tabel3, tabel4 = tabel4
+                tabel1 = tabel1, 
+                tabel2 = tabel2, 
+                tabel3 = tabel3, 
+                tabel4 = tabel4, 
+                status_aktif = status_aktif_name
             ))
         if dosen:
             response["status"] = True
@@ -246,11 +251,13 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenAll
             status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Dosen sudah dihapus"}
         )
+    status_aktif_name = StatusAktif(dosen[0].status_aktif).name
     result = schemasShowDosenAll(
         tabel1 = dosen[0],
         tabel2 = dosen[1],
         tabel3 = dosen[2],
-        tabel4 = dosen[3]
+        tabel4 = dosen[3],
+        status_aktif = status_aktif_name
     )
     try:
         response["status"] = True

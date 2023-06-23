@@ -94,6 +94,7 @@ class ShowDosenAll(BaseModel):
     tabel2 : ShowDosenAlamat
     tabel3 : ShowDosenRiwayatStudi
     tabel4 : ShowDosenJabfung
+    status_aktif: str
 # End Schemas Show Dosen All
 
 class ShowDataDosen(BaseModel):
