@@ -15,7 +15,12 @@ class Kurikulum(Base):
     sks_lulus = Column(Integer)
     sks_wajib = Column(Integer)
     sks_pilihan = Column(Integer)
-    status_aktif = Column(TINYINT, nullable = False, default = 1)
+    status_aktif = Column(
+        TINYINT, 
+        nullable = False, 
+        default = 1, 
+        comment = 'Status aktif: 0 - Nonaktif, 1 - Aktif'
+    )
     id_prodi = Column(Integer, ForeignKey('prodi.id_prodi', ondelete="CASCADE", onupdate="CASCADE"))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
