@@ -7,6 +7,12 @@ from schemas.dosen_alamat import ShowDosenAlamat
 from schemas.dosen_riwayat_studi import ShowDosenRiwayatStudi 
 from schemas.dosen_jabfung import ShowDosenJabfung 
 
+class StatusAktif(Enum):
+    Nonaktif = 0
+    Aktif = 1
+    Cuti = 2
+    Resign = 3
+
 # Shcemas Dosen
 class DosenBase(BaseModel):
     kode_dosen: str
@@ -23,7 +29,7 @@ class DosenBase(BaseModel):
     agama: str
     nama_ibu_kandung: str
     status_kedosenan: str
-    status_aktif: str
+    status_aktif: StatusAktif
     status_perkawinan: str
     hubungan_pasangan: str
     nik_pasangan: str
@@ -32,6 +38,9 @@ class DosenBase(BaseModel):
     mulai_sk_pengangkatan_dosen: date
     tgl_sk_nidn: date
     sumber_gaji: str
+
+    class Config:
+        use_enum_values = True
 
     @validator('kode_dosen', 'nidk', 'nidn', 'npwp', 'nama', 'jenis_kelamin', 'no_hp', 'email', 'id_prodi', 'tempat_lahir', 'tgl_lahir', 'agama', 'nama_ibu_kandung', 'status_kedosenan', 'status_aktif', 'status_perkawinan', 'hubungan_pasangan', 'nik_pasangan', 'pekerjaan_pasangan', 'no_sk_pengangkatan_dosen', 'tgl_sk_nidn', 'sumber_gaji')
     def check_not_null(cls, value):
@@ -65,7 +74,7 @@ class ShowDosen(BaseModel):
     agama: str
     nama_ibu_kandung: str
     status_kedosenan: str
-    status_aktif: str
+    status_aktif: StatusAktif
     status_perkawinan: str
     hubungan_pasangan: str
     nik_pasangan: str

@@ -26,7 +26,12 @@ class Dosen(Base):
     agama = Column(String(100))
     nama_ibu_kandung = Column(String(100))
     status_kedosenan = Column(String(100))
-    status_aktif = Column(String(100))
+    status_aktif = Column(
+        Integer,
+        nullable = False,
+        default = 1,
+        comment = 'Status Dosen: 0 - Nonaktif, 1 - Aktif, 2 - Cuti, 3 - Resign'
+    )
     status_perkawinan = Column(String(100))
     hubungan_pasangan = Column(String(100))
     nik_pasangan = Column(String(100))
