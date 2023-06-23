@@ -4,7 +4,7 @@ from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
-from schemas.kurikulum import Kurikulum as schemasKurikulum, ShowKurikulum as schemasShowKurikulum
+from schemas.kurikulum import Kurikulum as schemasKurikulum, ShowKurikulum as schemasShowKurikulum, StatusAktif
 from schemas.prodi import ShowDataProdi as schemasShowDataProdi
 from models.kurikulum import Kurikulum as modelsKurikulum
 from models.prodi import Prodi as modelsProdi
@@ -25,6 +25,8 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowKurikulum]]:
     data_all = []
     for kurikulum in response["data"]:
         kurikulum_data = schemasShowKurikulum.from_orm(kurikulum)
+        # Mengubah nilai status_aktif menjadi string sesuai dengan nama enumerasi
+        kurikulum_data.status_aktif = StatusAktif(kurikulum_data.status_aktif).name
         kurikulum_data.kurikulums = schemasShowDataProdi.from_orm(kurikulum.kurikulums)
         data_all.append(kurikulum_data)
     response["data"] = data_all
@@ -47,13 +49,22 @@ def create(request: schemasKurikulum, db: Session) -> Dict[str, Union[bool, str,
             headers = {"X-Error": "Data tidak valid"}
         )
     try:
+        # Set status aktif secara default (Walau statusnya di kirim nonaktif maka secara otomatis di set tetap aktif)
+        # request.status_aktif = StatusAktif.Aktif.value
+
         new_kurikulum = modelsKurikulum(** request.dict())
         db.add(new_kurikulum)
         db.commit()
         db.refresh(new_kurikulum)
         response["status"] = True
         response["msg"] = "Data Kurikulum Berhasil di Input"
-        response["data"] = schemasShowKurikulum.from_orm(new_kurikulum)
+
+        # Mendapatkan nama status aktif dari enumerasi
+        nama_status_aktif = StatusAktif(request.status_aktif).name
+        # Mengubah nilai status_aktif pada respons menjadi nama status
+        kurikulum_data = schemasShowKurikulum.from_orm(new_kurikulum)
+        kurikulum_data.status_aktif = nama_status_aktif
+        response["data"] = kurikulum_data
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -126,9 +137,12 @@ def update(id: int, request: schemasKurikulum, db: Session) -> Dict[str, Union[b
     try:
         kurikulum.update(request.dict())
         db.commit()
+        updated_kurikulum = kurikulum.first()
+        status_aktif = StatusAktif(updated_kurikulum.status_aktif).name
         response["status"] = True
         response["msg"] = "Data Kurikulum Berhasil di Update"
-        response["data"] = schemasShowKurikulum.from_orm(kurikulum.first())
+        response["data"] = schemasShowKurikulum.from_orm(updated_kurikulum)
+        response["data"].status_aktif = status_aktif
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -159,7 +173,9 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowKurikulu
     try:
         response["status"] = True
         response["msg"] = "Data Kurikulum Berhasil Ditemukan"
-        response["data"] = schemasShowKurikulum.from_orm(kurikulum)
+        kurikulum_data = schemasShowKurikulum.from_orm(kurikulum)
+        kurikulum_data.status_aktif = StatusAktif(kurikulum_data.status_aktif).name
+        response["data"] = kurikulum_data
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

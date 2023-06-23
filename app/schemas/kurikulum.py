@@ -5,6 +5,10 @@ from datetime import date
 import re
 from schemas.prodi import ShowProdi
 
+class StatusAktif(Enum):
+    Nonaktif = 0
+    Aktif = 1
+
 # Schemas Kurikulum
 class KurikulumBase(BaseModel):
     nama: str
@@ -13,8 +17,11 @@ class KurikulumBase(BaseModel):
     sks_lulus: int
     sks_wajib: int
     sks_pilihan: int
-    status_aktif: str
+    status_aktif: StatusAktif
     id_prodi: int
+
+    class Config:
+        use_enum_values = True
 
     @validator('nama', 'tahun', 'tgl_start', 'sks_lulus', 'sks_wajib', 'sks_pilihan', 'status_aktif', 'id_prodi')
     def check_not_null(cls, value):
@@ -34,7 +41,7 @@ class ShowKurikulum(BaseModel):
     sks_lulus: int
     sks_wajib: int
     sks_pilihan: int
-    status_aktif: str
+    status_aktif: StatusAktif
     id_prodi: int
     kurikulums: ShowProdi
 

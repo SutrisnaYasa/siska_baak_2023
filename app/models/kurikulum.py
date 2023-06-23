@@ -3,6 +3,7 @@ from database import Base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
+from sqlalchemy.dialects.mysql import TINYINT
 
 # Models Kurikulum
 class Kurikulum(Base):
@@ -14,7 +15,7 @@ class Kurikulum(Base):
     sks_lulus = Column(Integer)
     sks_wajib = Column(Integer)
     sks_pilihan = Column(Integer)
-    status_aktif = Column(String(100))
+    status_aktif = Column(TINYINT, nullable = False, default = 1)
     id_prodi = Column(Integer, ForeignKey('prodi.id_prodi', ondelete="CASCADE", onupdate="CASCADE"))
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
