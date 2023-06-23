@@ -3,6 +3,7 @@ from database import Base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
+from sqlalchemy.dialects.mysql import TINYINT
 from models.kurikulum import Kurikulum
 from models.matkul_prasyarat import MatkulPrasyarat
 from models.matkul_prasyarat_detail import MatkulPrasyaratDetail
@@ -15,7 +16,12 @@ class Matkul(Base):
     kode_matkul = Column(String(100))
     nama_matkul = Column(String(100))
     id_matkul_kelompok = Column(Integer, ForeignKey('matkul_kelompok.id', ondelete="CASCADE", onupdate="CASCADE"))
-    status_aktif = Column(String(100))
+    status_aktif = Column(
+        TINYINT,
+        nullable = False,
+        default = 1,
+        comment = 'Status aktif: 0 - Nonaktif, 1 - Aktif'
+    )
     status_wajib = Column(String(100))
     id_prodi = Column(Integer, ForeignKey('prodi.id_prodi', ondelete="CASCADE", onupdate="CASCADE"))
     deskripsi = Column(String(100))

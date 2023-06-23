@@ -6,12 +6,17 @@ import re
 from schemas.prodi import ShowDataProdi
 from schemas.kurikulum import ShowDataKurikulum
 from schemas.matkul_kelompok import ShowDataMatkulKelompok
+
+class StatusAktif(Enum):
+    Nonaktif = 0
+    Aktif = 1
+
 # Schemas Matkul 
 class MatkulBase(BaseModel):
     kode_matkul: str
     nama_matkul: str
     id_matkul_kelompok: int
-    status_aktif: str
+    status_aktif: StatusAktif
     status_wajib: str
     id_prodi: int
     deskripsi: str
@@ -21,6 +26,9 @@ class MatkulBase(BaseModel):
     praktik_lapangan: int
     pratikum: int
     tatap_muka: int
+
+    class Config:
+        use_enum_values = True
 
     @validator('kode_matkul', 'nama_matkul', 'id_matkul_kelompok', 'status_aktif', 'status_wajib', 'id_prodi', 'deskripsi', 'semester_buka', 'id_kurikulum', 'simulasi', 'praktik_lapangan', 'pratikum', 'tatap_muka')
     def check_not_null(cls, value):
@@ -37,7 +45,7 @@ class ShowMatkul(BaseModel):
     kode_matkul: str
     nama_matkul: str
     # id_matkul_kelompok: int
-    status_aktif: str
+    status_aktif: StatusAktif
     status_wajib: str
     # id_prodi: int
     deskripsi: str

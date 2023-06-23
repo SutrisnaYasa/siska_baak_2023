@@ -4,7 +4,7 @@ from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
-from schemas.matkul import Matkul as schemasMatkul, ShowMatkul as schemasShowMatkul
+from schemas.matkul import Matkul as schemasMatkul, ShowMatkul as schemasShowMatkul, StatusAktif
 from schemas.prodi import ShowDataProdi as schemasShowDataProdi
 from schemas.kurikulum import ShowDataKurikulum as schemasShowDataKurikulum
 from schemas.matkul_kelompok import ShowDataMatkulKelompok as schemasShowDataMatkulKelompok
@@ -31,6 +31,8 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMatkul]]:
         matkul_data.matkul_prodis = schemasShowDataProdi.from_orm(matkul.matkul_prodis)
         matkul_data.matkul_kurikulums = schemasShowDataKurikulum.from_orm(matkul.matkul_kurikulums)
         matkul_data.matkul_kelompoks = schemasShowDataMatkulKelompok.from_orm(matkul.matkul_kelompoks)
+        # Mengubah nilai status_aktif menjadi string sesuai dengan nama enumerasi
+        matkul_data.status_aktif = StatusAktif(matkul_data.status_aktif).name
         data_all.append(matkul_data)
     response["data"] = data_all
     return {"detail": [response]}
@@ -87,7 +89,12 @@ def create(request: schemasMatkul, db: Session) -> Dict[str, Union[bool, str, sc
         db.refresh(new_matkul)
         response["status"] = True
         response["msg"] = "Data Matkul Berhasil di Input"
-        response["data"] = schemasShowMatkul.from_orm(new_matkul)
+        # Mendapatkan nama status aktif dari enumerasi
+        nama_status_aktif = StatusAktif(request.status_aktif).name
+        # Mengubah nilai status_aktif pada respons menjadi nama status
+        matkul_data = schemasMatkul.from_orm(new_matkul)
+        matkul_data.status_aktif = nama_status_aktif
+        response["data"] = matkul_data
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -191,9 +198,12 @@ def update(id: int, request: schemasMatkul, db: Session) -> Dict[str, Union[bool
     try:
         matkul.update(request.dict())
         db.commit()
+        updated_matkul = matkul.first()
+        status_aktif = StatusAktif(updated_matkul.status_aktif).name
         response["status"] = True
         response["msg"] = "Data Matkul Berhasil di Update"
-        response["data"] = schemasShowMatkul.from_orm(matkul.first())
+        response["data"] = schemasShowMatkul.from_orm(updated_matkul)
+        response["data"].status_aktif = status_aktif
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -224,7 +234,9 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMatkul]]
     try:
         response["status"] = True
         response["msg"] = "Data Matkul Berhasil Ditemukan"
-        response["data"] = schemasShowMatkul.from_orm(matkul)
+        matkul_data = schemasShowMatkul.from_orm(matkul)
+        matkul_data.status_aktif = StatusAktif(matkul_data.status_aktif).name
+        response["data"] = matkul_data
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
