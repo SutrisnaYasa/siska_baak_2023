@@ -24,7 +24,12 @@ class Mahasiswa(Base):
     sekolah_asal = Column(String(100))
     id_prodi = Column(Integer, ForeignKey('prodi.id_prodi', ondelete="CASCADE", onupdate="CASCADE"))
     status_awal = Column(String(100))
-    status_aktif = Column(String(100))
+    status_aktif = Column(
+        Integer,
+        nullable = False,
+        default = 1,
+        comment = 'Status Mahasiswa: 0 - Nonaktif, 1 - Aktif, 2 - Cuti, 3 - Mengundurkan Diri'
+    )
     angkatan = Column(String(100))
     kelas = Column(String(100))
     no_hp = Column(String(100))

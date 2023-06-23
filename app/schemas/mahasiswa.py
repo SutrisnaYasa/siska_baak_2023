@@ -7,6 +7,12 @@ from schemas.mahasiswa_alamat import ShowMahasiswaAlamat
 from schemas.mahasiswa_ortu import ShowMahasiswaOrtu
 from schemas.mahasiswa_transfer import ShowMahasiswaTransfer
 
+class StatusAktif(Enum):
+    Nonaktif = 0
+    Aktif = 1
+    Cuti = 2
+    Mengundurkan_Diri = 3
+
 # Schemas Mahasiswa
 class MahasiswaBase(BaseModel):
     nim: str
@@ -21,7 +27,7 @@ class MahasiswaBase(BaseModel):
     sekolah_asal: str
     id_prodi: int
     status_awal: str
-    status_aktif: str
+    status_aktif: StatusAktif
     angkatan: str
     kelas: str
     no_hp: str
@@ -34,6 +40,9 @@ class MahasiswaBase(BaseModel):
     penerima_kps: str
     kebutuhan_khusus: str
     bidang_minat: str
+
+    class Config:
+        use_enum_values = True
 
     @validator('nim', 'nik', 'nisn', 'nama', 'tempat_lahir', 'jenis_kelamin', 'agama', 'kewarganegaraan', 'sekolah_asal', 'id_prodi', 'status_awal', 'status_aktif', 'angkatan', 'kelas', 'no_hp', 'no_tlp', 'email', 'jenis_tinggal', 'npwp', 'alat_transportasi', 'nomor_kps', 'penerima_kps', 'kebutuhan_khusus', 'bidang_minat')
     def check_not_null(cls, value):
@@ -65,7 +74,7 @@ class ShowMahasiswa(BaseModel):
     sekolah_asal: str
     id_prodi: int
     status_awal: str
-    status_aktif: str
+    status_aktif: StatusAktif
     angkatan: str
     kelas: str
     no_hp: str
