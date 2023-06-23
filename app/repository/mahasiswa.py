@@ -5,7 +5,7 @@ from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
-from schemas.mahasiswa import Mahasiswa as schemasMahasiswa, ShowMahasiswa as schemasShowMahasiswa, ShowMahasiswaAll as schemasShowMahasiswaAll
+from schemas.mahasiswa import Mahasiswa as schemasMahasiswa, ShowMahasiswa as schemasShowMahasiswa, ShowMahasiswaAll as schemasShowMahasiswaAll, StatusAktif
 from schemas.mahasiswa_alamat import MahasiswaAlamat as schemasMahasiswaAlamat, ShowMahasiswaAlamat as schemasShowMahasiswaAlamat
 from schemas.mahasiswa_ortu import MahasiswaOrtu as schemasMahasiswaOrtu, ShowMahasiswaOrtu as schemasShowMahasiswaOrtu
 from schemas.mahasiswa_transfer import MahasiswaTransfer as schemasMahasiswaTransfer, ShowMahasiswaTransfer as schemasShowMahasiswaTransfer
@@ -41,8 +41,13 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaAll]]
 
         result = []
         for tabel1, tabel2, tabel3, tabel4 in mahasiswa:
+            status_aktif_name = StatusAktif(tabel1.status_aktif).name
             result.append(schemasShowMahasiswaAll(
-                tabel1 = tabel1, tabel2 = tabel2, tabel3 = tabel3, tabel4 = tabel4
+                tabel1 = tabel1, 
+                tabel2 = tabel2, 
+                tabel3 = tabel3, 
+                tabel4 = tabel4,
+                status_aktif = status_aktif_name
             ))
         if mahasiswa:
             response["status"] = True
@@ -250,11 +255,13 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasisw
             status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Mahasiswa sudah dihapus"}
         )
+    status_aktif_name = StatusAktif(mahasiswa[0].status_aktif).name
     result = schemasShowMahasiswaAll(
         tabel1 = mahasiswa[0],
         tabel2 = mahasiswa[1],
         tabel3 = mahasiswa[2],
-        tabel4 = mahasiswa[3]
+        tabel4 = mahasiswa[3],
+        status_aktif = status_aktif_name
     )
 
     try:

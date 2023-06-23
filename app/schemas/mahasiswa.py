@@ -98,4 +98,5 @@ class ShowMahasiswaAll(BaseModel):
     tabel2 : ShowMahasiswaAlamat
     tabel3 : ShowMahasiswaOrtu
     tabel4 : ShowMahasiswaTransfer
+    status_aktif: str
 # End Schemas Show Mahasiswa All
