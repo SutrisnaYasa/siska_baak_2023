@@ -17,6 +17,7 @@ class MahasiswaAlamatBase(BaseModel):
     rw: str
     kode_pos: str
 
+    # Validasi field tidak boleh kosong
     @validator('alamat_rmh', 'provinsi', 'kab_kota', 'kecamatan', 'kelurahan', 'dusun', 'rt', 'rw', 'kode_pos')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -27,6 +28,7 @@ class MahasiswaAlamat(MahasiswaAlamatBase):
     class Config:
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowMahasiswaAlamat(BaseModel):
     # id_mahasiswa: int
     id_mhs_alamat: int

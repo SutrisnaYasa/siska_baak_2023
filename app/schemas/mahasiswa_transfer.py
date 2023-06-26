@@ -11,6 +11,7 @@ class MahasiswaTransferBase(BaseModel):
     nim_asal: str
     ipk_lama: float
 
+    # Validasi field tidak boleh kosong
     @validator('kampus_asal', 'nim_asal', 'ipk_lama')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -21,6 +22,7 @@ class MahasiswaTransfer(MahasiswaTransferBase):
     class Config:
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowMahasiswaTransfer(BaseModel):
     # id_mahasiswa: int
     id_mhs_transfer: int

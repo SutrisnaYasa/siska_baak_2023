@@ -11,12 +11,14 @@ class ProdiBase(BaseModel):
     nama_prodi: str
     id_fakultas: int
 
+    # Validasi field tidak boleh kosong
     @validator('kode_prodi', 'nama_prodi', 'id_fakultas')
     def check_not_null(cls, value):
         if value is None or value == "":
             raise ValueError('Field tidak boleh kosong')
         return value
     
+    # Validasi kode prodi tidak boleh mengandung spasi
     @validator('kode_prodi')
     def check_spasi(cls, value):
         if re.search(r'\s', value):
@@ -27,6 +29,7 @@ class Prodi(ProdiBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowProdi(BaseModel):
     id_prodi: int
     kode_prodi: str
@@ -36,6 +39,7 @@ class ShowProdi(BaseModel):
     class Config():
         orm_mode = True
 
+# Schemas untuk menampilkan beberapa data saja saat relasi
 class ShowDataProdi(BaseModel):
     id_prodi: int
     kode_prodi: str

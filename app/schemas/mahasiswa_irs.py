@@ -13,6 +13,7 @@ class MahasiswaIrsBase(BaseModel):
     id_grade: int
     id_tahun_ajar: int
 
+    # Validasi field tidak boleh kosong
     @validator('id_mahasiswa', 'id_matkul', 'id_dosen_mengajar', 'tgl_setuju', 'id_grade', 'id_tahun_ajar')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -23,6 +24,7 @@ class MahasiswaIrs(MahasiswaIrsBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowMahasiswaIrs(BaseModel):
     id: int
     id_mahasiswa: int

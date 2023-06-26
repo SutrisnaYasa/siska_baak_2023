@@ -13,6 +13,7 @@ class DosenMengajarKontrakBase(BaseModel):
     bobot_tugas: int
     deskripsi_kontrak: str
 
+    # Validasi field tidak boleh kosong
     @validator('id_dosen_mengajar', 'bobot_uas', 'bobot_uts', 'bobot_keaktifan', 'bobot_tugas', 'deskripsi_kontrak')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -23,6 +24,7 @@ class DosenMengajarKontrak(DosenMengajarKontrakBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowDosenMengajarKontrak(BaseModel):
     id: int
     id_dosen_mengajar: int

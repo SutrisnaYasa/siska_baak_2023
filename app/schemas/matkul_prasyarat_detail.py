@@ -11,6 +11,7 @@ class MatkulPrasyaratDetailBase(BaseModel):
     id_matkul_prasyarat: int
     id_syarat: int
 
+    # Validasi field tidak boleh kosong
     @validator('id_matkul_prasyarat', 'id_syarat')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -21,6 +22,7 @@ class MatkulPrasyaratDetail(MatkulPrasyaratDetailBase):
     class Config():
         orm_mode = True
     
+# Field yang akan ditampilkan
 class ShowMatkulPrasyaratDetail(BaseModel):
     id: int
     mkl_prasyarat_detail: ShowDataMatkul

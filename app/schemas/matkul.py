@@ -7,6 +7,7 @@ from schemas.prodi import ShowDataProdi
 from schemas.kurikulum import ShowDataKurikulum
 from schemas.matkul_kelompok import ShowDataMatkulKelompok
 
+# Buat list Enum status aktif 
 class StatusAktif(Enum):
     Nonaktif = 0
     Aktif = 1
@@ -30,6 +31,7 @@ class MatkulBase(BaseModel):
     class Config:
         use_enum_values = True
 
+    # Validasi field tidak boleh kosong
     @validator('kode_matkul', 'nama_matkul', 'id_matkul_kelompok', 'status_aktif', 'status_wajib', 'id_prodi', 'deskripsi', 'semester_buka', 'id_kurikulum', 'simulasi', 'praktik_lapangan', 'pratikum', 'tatap_muka')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -40,6 +42,7 @@ class Matkul(MatkulBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowMatkul(BaseModel):
     id: int
     kode_matkul: str
@@ -62,6 +65,7 @@ class ShowMatkul(BaseModel):
     class Config():
         orm_mode = True
 
+# Schemas untuk menampilkan data di relasi ( beberapa data saja )
 class ShowDataMatkul(BaseModel):
     id: int
     kode_matkul: str

@@ -14,6 +14,7 @@ class MhsTrfNilaiKonversiBase(BaseModel):
     id_matkul: int
     nilai_akhir: float
 
+    # Validasi field tidak boleh kosong
     @validator('id_mahasiswa_transfer', 'id_matkul_asal', 'nama_matkul_asal', 'sks_matkul_asal', 'nilai_huruf_matkul_asal', 'id_matkul', 'nilai_akhir')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -24,6 +25,7 @@ class MhsTrfNilaiKonversi(MhsTrfNilaiKonversiBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowMhsTrfNilaiKonversi(BaseModel):
     id: int
     id_mahasiswa_transfer: int

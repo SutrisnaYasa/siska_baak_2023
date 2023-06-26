@@ -11,6 +11,7 @@ class TahunAjarBase(BaseModel):
     tanggal_mulai: date
     tanggal_akhir: date
 
+    # Validasi field tidak boleh kosong
     @validator('nama_tahun_ajar', 'semester', 'tanggal_mulai', 'tanggal_akhir')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -21,6 +22,7 @@ class TahunAjar(TahunAjarBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowTahunAjar(BaseModel):
     id: int
     nama_tahun_ajar: str

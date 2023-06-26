@@ -16,6 +16,7 @@ class DosenMengajarBase(BaseModel):
     id_tahun_ajar: int
     jml_kursi: str
 
+    # Validasi field tidak boleh kosong
     @validator('id_dosen', 'id_matkul', 'hari', 'jam_mulai', 'jam_akhir', 'id_ruangan', 'kelas', 'id_tahun_ajar', 'jml_kursi')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -26,6 +27,7 @@ class DosenMengajar(DosenMengajarBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowDosenMengajar(BaseModel):
     id: int
     id_dosen: int

@@ -7,6 +7,7 @@ from schemas.dosen_alamat import ShowDosenAlamat
 from schemas.dosen_riwayat_studi import ShowDosenRiwayatStudi 
 from schemas.dosen_jabfung import ShowDosenJabfung 
 
+# Buat List Enum untuk field status aktif
 class StatusAktif(Enum):
     Nonaktif = 0
     Aktif = 1
@@ -42,12 +43,14 @@ class DosenBase(BaseModel):
     class Config:
         use_enum_values = True
 
+    # Validasi field tidak boleh kosong
     @validator('kode_dosen', 'nidk', 'nidn', 'npwp', 'nama', 'jenis_kelamin', 'no_hp', 'email', 'id_prodi', 'tempat_lahir', 'tgl_lahir', 'agama', 'nama_ibu_kandung', 'status_kedosenan', 'status_aktif', 'status_perkawinan', 'hubungan_pasangan', 'nik_pasangan', 'pekerjaan_pasangan', 'no_sk_pengangkatan_dosen', 'tgl_sk_nidn', 'sumber_gaji')
     def check_not_null(cls, value):
         if value is None or value == "":
             raise ValueError('Field tidak boleh kosong')
         return value
     
+    # Validasi field tidak boleh mengandung spasi
     @validator('kode_dosen')
     def check_spasi(cls, value):
         if re.search(r'\s', value):
@@ -58,6 +61,7 @@ class Dosen(DosenBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowDosen(BaseModel):
     id_dosen: int
     kode_dosen: str
@@ -88,7 +92,7 @@ class ShowDosen(BaseModel):
         orm_mode = True
 # End Dosen Schemas
 
-# Schemas Show Dosen All
+# Schemas Show Dosen All ( Schemas untuk menampilkan data dosen, dosen alamat, riwayat studi, dan jabfung )
 class ShowDosenAll(BaseModel):
     tabel1 : ShowDosen
     tabel2 : ShowDosenAlamat
@@ -97,6 +101,7 @@ class ShowDosenAll(BaseModel):
     status_aktif: str
 # End Schemas Show Dosen All
 
+# Schemas untuk menampilkan data dosen saat relasi (tidak semua data / beberapa data yang diperlukan saja)
 class ShowDataDosen(BaseModel):
     id_dosen: int
     kode_dosen: str

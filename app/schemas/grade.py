@@ -10,6 +10,7 @@ class GradeBase(BaseModel):
     bobot_awal: int
     bobot_akhir: int
     
+    # Validasi field tidak boleh kosong
     @validator('nilai_huruf', 'bobot_awal', 'bobot_akhir')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -20,6 +21,7 @@ class Grade(GradeBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowGrade(BaseModel):
     id: int
     nilai_huruf: str

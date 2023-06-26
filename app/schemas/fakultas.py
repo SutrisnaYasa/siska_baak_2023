@@ -9,12 +9,14 @@ class FakultasBase(BaseModel):
     kode_fakultas: str
     nama_fakultas: str
 
+    # Validasi field tidak boleh kosong
     @validator('kode_fakultas','nama_fakultas')
     def check_not_null(cls, value):
         if value is None or value == "":
             raise ValueError('Field tidak boleh kosong')
         return value
 
+    # Validasi Kode fakultas tidak boleh mengandung spasi
     @validator('kode_fakultas')
     def check_spasi(cls, value):
         if re.search(r'\s', value):
@@ -25,6 +27,7 @@ class Fakultas(FakultasBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowFakultas(BaseModel):
     id_fakultas: int
     kode_fakultas: str

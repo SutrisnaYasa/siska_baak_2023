@@ -10,6 +10,7 @@ class MatkulKelompokBase(BaseModel):
     nama_kelompok_matkul: str
     id_dosen: int
 
+    # Validasi field tidak boleh kosong
     @validator('nama_kelompok_matkul', 'id_dosen')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -20,6 +21,7 @@ class MatkulKelompok(MatkulKelompokBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowMatkulKelompok(BaseModel):
     id: int
     nama_kelompok_matkul: str
@@ -29,6 +31,7 @@ class ShowMatkulKelompok(BaseModel):
     class Config():
         orm_mode = True
 
+# Schemas untuk menampilkan data dari relasi ( hanya beberapa data yang diperlukan)
 class ShowDataMatkulKelompok(BaseModel):
     id: int
     nama_kelompok_matkul: str

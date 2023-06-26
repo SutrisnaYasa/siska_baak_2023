@@ -17,6 +17,7 @@ class MahasiswaOrtuBase(BaseModel):
     penghasilan: str
     kebutuhan_khusus_ortu: str
 
+    # Validasi field tidak boleh kosong
     @validator('status_hubungan', 'nik', 'nama_ortu', 'no_hp_ortu', 'tgl_lahir_ortu', 'pendidikan', 'pekerjaan', 'penghasilan', 'kebutuhan_khusus_ortu')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -27,6 +28,7 @@ class MahasiswaOrtu(MahasiswaOrtuBase):
     class Config:
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowMahasiswaOrtu(BaseModel):
     # id_mahasiswa: int
     id_mhs_ortu: int

@@ -5,6 +5,7 @@ from datetime import date
 import re
 from schemas.prodi import ShowProdi
 
+# Buat List Enum untuk status aktif kurikulum
 class StatusAktif(Enum):
     Nonaktif = 0
     Aktif = 1
@@ -23,6 +24,7 @@ class KurikulumBase(BaseModel):
     class Config:
         use_enum_values = True
 
+    # Validasi field tidak boleh kosong
     @validator('nama', 'tahun', 'tgl_start', 'sks_lulus', 'sks_wajib', 'sks_pilihan', 'status_aktif', 'id_prodi')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -33,6 +35,7 @@ class Kurikulum(KurikulumBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowKurikulum(BaseModel):
     id: int
     nama: str
@@ -48,6 +51,7 @@ class ShowKurikulum(BaseModel):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan untuk relasi ( beberapa field saja )
 class ShowDataKurikulum(BaseModel):
     id: int
     nama: str

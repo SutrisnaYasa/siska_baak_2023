@@ -4,7 +4,7 @@ from pydantic import BaseModel, validator
 from datetime import date
 import re
 
-# Membuat pilihan untuk role user
+# Membuat pilihan untuk role user dengan Enum
 class Roles(str, Enum):
     user = "user",
     admin = "admin"

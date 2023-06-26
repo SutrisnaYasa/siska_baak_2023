@@ -12,6 +12,7 @@ class MahasiswaIrsNilaiBase(BaseModel):
     uts: float
     uas: float
 
+    # Validasi field tidak boleh kosong
     @validator('id_mahasiswa_irs', 'keaktifan', 'tugas', 'uts', 'uas')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -22,6 +23,7 @@ class MahasiswaIrsNilai(MahasiswaIrsNilaiBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowMahasiswaIrsNilai(BaseModel):
     id: int
     id_mahasiswa_irs: int

@@ -7,6 +7,7 @@ from schemas.mahasiswa_alamat import ShowMahasiswaAlamat
 from schemas.mahasiswa_ortu import ShowMahasiswaOrtu
 from schemas.mahasiswa_transfer import ShowMahasiswaTransfer
 
+# Buat list Enum untuk status aktif mahasiswa
 class StatusAktif(Enum):
     Nonaktif = 0
     Aktif = 1
@@ -44,12 +45,14 @@ class MahasiswaBase(BaseModel):
     class Config:
         use_enum_values = True
 
+    # Validasi field tidak boleh kosong
     @validator('nim', 'nik', 'nisn', 'nama', 'tempat_lahir', 'jenis_kelamin', 'agama', 'kewarganegaraan', 'sekolah_asal', 'id_prodi', 'status_awal', 'status_aktif', 'angkatan', 'kelas', 'no_hp', 'no_tlp', 'email', 'jenis_tinggal', 'npwp', 'alat_transportasi', 'nomor_kps', 'penerima_kps', 'kebutuhan_khusus', 'bidang_minat')
     def check_not_null(cls, value):
         if value is None or value == "":
             raise ValueError('Field tidak boleh kosong')
         return value
 
+    # Validasi nim tidak boleh mengandung spasi
     @validator('nim')
     def check_spasi(cls, value):
         if re.search(r'\s', value):
@@ -60,6 +63,7 @@ class Mahasiswa(MahasiswaBase):
     class Config:
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowMahasiswa(BaseModel):
     id_mahasiswa: int
     nim: str
@@ -92,7 +96,7 @@ class ShowMahasiswa(BaseModel):
         orm_mode = True
 # End Schemas Mahasiswa
 
-# Schemas Show Mahasiswa All
+# Schemas Show Mahasiswa All (Schemas untuk menampilkan semua data dari mahasiswa, alamat, ortu, dan mahasiswa transfer)
 class ShowMahasiswaAll(BaseModel):
     tabel1 : ShowMahasiswa
     tabel2 : ShowMahasiswaAlamat

@@ -18,6 +18,7 @@ class DosenJabfungBase(BaseModel):
     tanggal_sk_cpns: date
     tanggal_mulai_cpns: date
 
+    # Validasi field tidak boleh kosong
     @validator('jabatan_fungsional', 'no_sk_jabfung', 'pangkat', 'golongan', 'mulai_sk_jabfung', 'no_sk_pangkat', 'tanggal_sk_pangkat', 'mulai_sk_pangkat', 'no_sk_cpns', 'tanggal_sk_cpns', 'tanggal_mulai_cpns')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -28,6 +29,7 @@ class DosenJabfung(DosenJabfungBase):
     class Config():
         orm_mode = True
     
+# Field yang akan ditampilkan
 class ShowDosenJabfung(BaseModel):
     id: int
     jabatan_fungsional: str

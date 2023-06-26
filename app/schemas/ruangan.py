@@ -10,6 +10,7 @@ class RuanganBase(BaseModel):
     kapasitas: int
     gedung: str
 
+    # Validasi field tidak boleh kosong
     @validator('nama_ruangan', 'kapasitas', 'gedung')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -20,6 +21,7 @@ class Ruangan(RuanganBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowRuangan(BaseModel):
     id: int
     nama_ruangan: str

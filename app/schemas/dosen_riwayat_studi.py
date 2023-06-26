@@ -17,6 +17,7 @@ class DosenRiwayatStudiBase(BaseModel):
     ipk: float
     judul_tugas_akhir: str
 
+    # Validasi field tidak boleh kosong
     @validator('jenjang_pendidikan', 'nama_kampus', 'fakultas', 'prodi', 'gelar', 'tahun_masuk','tahun_lulus', 'sks_lulus', 'ipk', 'judul_tugas_akhir')
     def check_not_null(cls, value):
         if value is None or value == "":
@@ -27,6 +28,7 @@ class DosenRiwayatStudi(DosenRiwayatStudiBase):
     class Config():
         orm_mode = True
 
+# Field yang akan ditampilkan
 class ShowDosenRiwayatStudi(BaseModel):
     id: int
     jenjang_pendidikan: str
