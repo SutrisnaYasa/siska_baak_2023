@@ -27,6 +27,11 @@ def destroy(id: int, db: Session = Depends(get_db)):
 def update(id: int, request: schemasProdi, db: Session = Depends(get_db)):
     return prodi.update(id, request, db)
 
+@router.get('/search', status_code=status.HTTP_200_OK)
+def search(keyword: str, db: Session = Depends(get_db)):
+    return prodi.search(keyword, db)
+
 @router.get('/{id}', status_code = status.HTTP_200_OK)
 def show(id: int, db: Session = Depends(get_db)):
     return prodi.show(id, db)
+

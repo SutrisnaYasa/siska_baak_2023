@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
-from sqlalchemy import exists, and_
+from sqlalchemy import exists, and_, or_
 import datetime
 from schemas.prodi import Prodi as schemasProdi, ShowProdi as schemasShowProdi
 from schemas.fakultas import ShowFakultas as schemasShowFakultas
@@ -192,3 +192,25 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowProdi]]:
         response["msg"] = str(e)
     return {"detail": [response]}
 
+def search(keyword: str, db: Session) -> Dict[str, Union[bool, str, List[schemasShowProdi]]]:
+    response = {"status": False, "msg": "", "data": []}
+    try:
+        prodi_search = db.query(modelsProdi).join(modelsProdi.prodis).filter(
+            or_(
+                modelsProdi.nama_prodi.ilike(f"%{keyword}%"),
+                modelsProdi.kode_prodi.ilike(f"%{keyword}%"),
+                modelsFakultas.nama_fakultas.ilike(f"%{keyword}%"),
+                modelsFakultas.kode_fakultas.ilike(f"%{keyword}%")
+            ),
+            modelsProdi.deleted_at.is_(None)
+
+        ).all()
+        if prodi_search:
+            response["status"] = True
+            response["msg"] = "Data Prodi Berhasil Ditemukan"
+            response["data"] = [schemasShowProdi.from_orm(prodi) for prodi in prodi_search]
+        else:
+            response["msg"] = "Data Prodi tidak ditemukan"
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
