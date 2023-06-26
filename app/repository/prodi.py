@@ -214,3 +214,36 @@ def search(keyword: str, db: Session) -> Dict[str, Union[bool, str, List[schemas
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
+
+def filter(keyword: str, kode_prodi: str, id_fakultas: int, db: Session) -> Dict[str, Union[bool, str, List[schemasShowProdi]]]:
+    response = {"status": False, "msg": "", "data": []}
+    try:
+        query = db.query(modelsProdi).join(modelsProdi.prodis).filter(modelsProdi.deleted_at.is_(None))
+
+        if keyword:
+            query = query.filter(
+                or_(
+                    modelsProdi.nama_prodi.ilike(f"%{keyword}%"),
+                    modelsProdi.kode_prodi.ilike(f"%{keyword}%"),
+                    modelsFakultas.nama_fakultas.ilike(f"%{keyword}%"),
+                    modelsFakultas.kode_fakultas.ilike(f"%{keyword}%")
+                )
+            )
+
+        if kode_prodi:
+            query = query.filter(modelsProdi.kode_prodi.ilike(f"%{kode_prodi}%"))
+
+        if id_fakultas is not None:
+            query = query.filter(modelsProdi.id_fakultas == id_fakultas)
+
+        prodi_filtered = query.all()
+
+        if prodi_filtered:
+            response["status"] = True
+            response["msg"] = "Data Prodi Berhasil Ditemukan"
+            response["data"] = [schemasShowProdi.from_orm(prodi) for prodi in prodi_filtered]
+        else:
+            response["msg"] = "Data Prodi tidak ditemukan"
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}

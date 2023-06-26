@@ -31,6 +31,15 @@ def update(id: int, request: schemasProdi, db: Session = Depends(get_db)):
 def search(keyword: str, db: Session = Depends(get_db)):
     return prodi.search(keyword, db)
 
+@router.get('/filter', status_code=status.HTTP_200_OK)
+def filter_prodi(
+    keyword: str = '',
+    kode_prodi: str = '',
+    id_fakultas: int = None,
+    db: Session = Depends(get_db)
+):
+    return prodi.filter(keyword, kode_prodi, id_fakultas, db)
+
 @router.get('/{id}', status_code = status.HTTP_200_OK)
 def show(id: int, db: Session = Depends(get_db)):
     return prodi.show(id, db)
