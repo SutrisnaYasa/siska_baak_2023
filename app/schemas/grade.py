@@ -30,4 +30,12 @@ class ShowGrade(BaseModel):
 
     class Config():
         orm_mode = True
+
+# Field yang ditampilkan di relasi 
+class ShowDataGrade(BaseModel):
+    id: int
+    nilai_huruf: str
+
+    class Config():
+        orm_mode = True
 # End Schemas Grade

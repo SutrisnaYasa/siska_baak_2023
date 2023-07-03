@@ -5,6 +5,11 @@ import json
 from sqlalchemy import exists, and_
 import datetime
 from schemas.mahasiswa_irs import MahasiswaIrs as schemasMahasiswaIrs, ShowMahasiswaIrs as schemasShowMahasiswaIrs
+from schemas.mahasiswa import ShowDataMahasiswa as schemasShowDataMahasiswa
+from schemas.matkul import ShowDataMatkul as schemasShowDataMatkul
+from schemas.grade import ShowDataGrade as schemasShowDataGrade
+from schemas.tahun_ajar import ShowDataTahunAjar as schemasShowDataTahunAjar
+from schemas.dosen_mengajar import ShowDataDosenMengajar as schemasShowDataDosenMengajar
 from models.mahasiswa_irs import MahasiswaIrs as modelsMahasiswaIrs
 from models.mahasiswa import Mahasiswa as modelsMahasiswa
 from models.matkul import Matkul as modelsMatkul
@@ -24,6 +29,16 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrs]]
             response["msg"] = "Data IRS Mahasiswa Masih Kosong"
     except Exception as e:
         response["msg"] = str(e)
+    data_all = []
+    for mhs_irs in response["data"]:
+        mhs_irs_data = schemasShowMahasiswaIrs.from_orm(mhs_irs)
+        mhs_irs_data.irs_mhs = schemasShowDataMahasiswa.from_orm(mhs_irs.irs_mhs)
+        mhs_irs_data.irs_matkul = schemasShowDataMatkul.from_orm(mhs_irs.irs_matkul)
+        mhs_irs_data.irs_grade = schemasShowDataGrade.from_orm(mhs_irs.irs_grade)
+        mhs_irs_data.irs_tahun_ajar = schemasShowDataTahunAjar.from_orm(mhs_irs.irs_tahun_ajar)
+        mhs_irs_data.mhs_dosen_mengajars = schemasShowDataDosenMengajar.from_orm(mhs_irs.mhs_dosen_mengajars)
+        data_all.append(mhs_irs_data)
+    response["data"] = data_all
     return {"detail": [response]}
 
 def create(request: schemasMahasiswaIrs, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrs]]:
