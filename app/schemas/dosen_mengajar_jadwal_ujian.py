@@ -3,6 +3,8 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 from datetime import date
 import re
+from schemas.dosen_mengajar import ShowDataDosenMengajar
+from schemas.ruangan import ShowDataRuangan
 
 # Schemas Dosen Mengajar Jadwal Ujian
 class DosenMengajarJadwalUjianBase(BaseModel):
@@ -37,6 +39,8 @@ class ShowDosenMengajarJadwalUjian(BaseModel):
     jam_akhir: str
     pengawas: str
     id_ruangan: int
+    dosen_jadwal_ujian: ShowDataDosenMengajar
+    dosen_jadwal_ujian_ruangan: ShowDataRuangan
 
     class Config():
         orm_mode = True
