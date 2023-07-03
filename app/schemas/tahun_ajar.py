@@ -32,4 +32,13 @@ class ShowTahunAjar(BaseModel):
 
     class Config():
         orm_mode = True
+        
+# Schemas show untuk beberapa field saja
+class ShowDataTahunAjar(BaseModel):
+    id: int
+    nama_tahun_ajar: str
+    semester: str
+
+    class Config():
+        orm_mode = True
 # End Schemas Tahun Ajar

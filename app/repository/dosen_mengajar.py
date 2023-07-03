@@ -5,6 +5,10 @@ import json
 from sqlalchemy import exists, and_
 import datetime
 from schemas.dosen_mengajar import DosenMengajar as schemasDosenMengajar, ShowDosenMengajar as schemasShowDosenMengajar
+from schemas.dosen import ShowDataDosen as schemasShowDataDosen
+from schemas.matkul import ShowDataMatkul as schemasShowDataMatkul
+from schemas.ruangan import ShowDataRuangan as schemasShowDataRuangan
+from schemas.tahun_ajar import ShowDataTahunAjar as schemasShowDataTahunAjar
 from models.dosen_mengajar import DosenMengajar as modelsDosenMengajar
 from models.dosen import Dosen as modelsDosen
 from models.matkul import Matkul as modelsMatkul
@@ -23,6 +27,15 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMengajar]
             response["msg"] = "Data Mengajar Dosen Masih Kosong"
     except Exception as e:
         response["msg"] = str(e)
+    data_all = []
+    for dosen_mengajar in response["data"]:
+        dosen_mengajar_data = schemasShowDosenMengajar.from_orm(dosen_mengajar)
+        dosen_mengajar_data.mengajar_dosen = schemasShowDataDosen.from_orm(dosen_mengajar.mengajar_dosen)
+        dosen_mengajar_data.mengajar_matkul = schemasShowDataMatkul.from_orm(dosen_mengajar.mengajar_matkul)
+        dosen_mengajar_data.mengajar_ruangan = schemasShowDataRuangan.from_orm(dosen_mengajar.mengajar_ruangan)
+        dosen_mengajar_data.mengajar_tahun_ajar = schemasShowDataTahunAjar.from_orm(dosen_mengajar.mengajar_tahun_ajar)
+        data_all.append(dosen_mengajar_data)
+    response["data"] = data_all
     return {"detail": [response]}
 
 def create(request: schemasDosenMengajar, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMengajar]]:

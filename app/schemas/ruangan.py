@@ -30,4 +30,12 @@ class ShowRuangan(BaseModel):
 
     class Config():
         orm_mode = True
+
+# Schemas show untuk beberapa field saja
+class ShowDataRuangan(BaseModel):
+    id: int
+    nama_ruangan: str
+
+    class Config():
+        orm_mode = True
 # End Schemas Master Ruangan
