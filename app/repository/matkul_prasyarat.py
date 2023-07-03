@@ -162,3 +162,34 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulPr
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
+
+def get_matkul_prasyarat_by_id_matkul(id_matkul: int, db: Session) -> Dict[str, Union[bool, str, List[schemasShowMatkulPrasyarat]]]:
+    response = {"status": False, "msg": "", "data": [], "total_id_matkul": 0}
+    try:
+        matkul_prasyarat = db.query(modelsMatkulPrasyarat).filter(
+            modelsMatkulPrasyarat.id_matkul == id_matkul,
+            modelsMatkulPrasyarat.deleted_at == None
+        ).order_by(modelsMatkulPrasyarat.id).all()
+        
+        if matkul_prasyarat:
+            response["status"] = True
+            response["msg"] = "Data Matkul Prasyarat Berhasil Ditemukan"
+            response["total_id_matkul"] = len(matkul_prasyarat)
+
+            for i, mp in enumerate(matkul_prasyarat):
+                mp_data = schemasShowMatkulPrasyarat.from_orm(mp)
+                mp_data_dict = mp_data.dict()
+
+                if i == 0:
+                    mp_data_dict["kondisi"] = "kondisi 1"
+                elif i == len(matkul_prasyarat) - 1:
+                    mp_data_dict["kondisi"] = "kondisi terakhir"
+                else:
+                    mp_data_dict["kondisi"] = f"kondisi {i + 1}"
+
+                response["data"].append(mp_data_dict)
+        else:
+            response["msg"] = "Data Matkul Prasyarat untuk ID Matkul tersebut tidak ditemukan"
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
