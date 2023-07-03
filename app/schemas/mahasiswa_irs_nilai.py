@@ -3,6 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 from datetime import date
 import re
+from schemas.mahasiswa_irs import ShowDataMahasiswaIrs
 
 # Schemas Mahasiswa IRS Nilai
 class MahasiswaIrsNilaiBase(BaseModel):
@@ -31,6 +32,7 @@ class ShowMahasiswaIrsNilai(BaseModel):
     tugas: float
     uts: float
     uas: float
+    mhs_nilai_irs: ShowDataMahasiswaIrs
 
     class Config():
         orm_mode = True

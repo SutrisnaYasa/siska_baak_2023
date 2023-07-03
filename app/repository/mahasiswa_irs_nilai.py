@@ -5,6 +5,7 @@ import json
 from sqlalchemy import exists, and_
 import datetime
 from schemas.mahasiswa_irs_nilai import MahasiswaIrsNilai as schemasMahasiswaIrsNilai, ShowMahasiswaIrsNilai as schemasShowMahasiswaIrsNilai
+from schemas.mahasiswa_irs import ShowDataMahasiswaIrs as schemasShowDataMahasiswaIrs
 from models.mahasiswa_irs_nilai import MahasiswaIrsNilai as modelsMahasiswaIrsNilai
 from models.mahasiswa_irs import MahasiswaIrs as modelsMahasiswaIrs
 
@@ -20,6 +21,12 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrsNi
             response["msg"] = "Data Nilai IRS Mahasiswa Masih Kosong"
     except Exception as e:
         response["msg"] = str(e)
+    data_all = []
+    for mhs_irs in response["data"]:
+        mhs_irs_data = schemasShowMahasiswaIrsNilai.from_orm(mhs_irs)
+        mhs_irs_data.mhs_nilai_irs = schemasShowDataMahasiswaIrs.from_orm(mhs_irs.mhs_nilai_irs)
+        data_all.append(mhs_irs_data)
+    response["data"] = data_all
     return {"detail": [response]}
 
 def create(request: schemasMahasiswaIrsNilai, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrsNilai]]:

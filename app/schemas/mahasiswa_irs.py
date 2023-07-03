@@ -47,4 +47,16 @@ class ShowMahasiswaIrs(BaseModel):
 
     class Config():
         orm_mode = True
+
+# Field untuk direlasi
+class ShowDataMahasiswaIrs(BaseModel):
+    id: int
+    id_mahasiswa: int
+    id_matkul: int
+    id_dosen_mengajar: int
+    id_grade: int
+    tgl_setuju: date
+
+    class Config():
+        orm_mode = True
 # End Schemas Mahasiswa IRS
