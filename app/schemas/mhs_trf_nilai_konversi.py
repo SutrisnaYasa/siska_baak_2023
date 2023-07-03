@@ -3,6 +3,8 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 from datetime import date
 import re
+from schemas.mahasiswa_transfer import ShowDataMahasiswaTransfer
+from schemas.matkul import ShowDataMatkul
 
 # Schemas Mahasiswa Transfer Nilai Konversi
 class MhsTrfNilaiKonversiBase(BaseModel):
@@ -35,6 +37,8 @@ class ShowMhsTrfNilaiKonversi(BaseModel):
     nilai_huruf_matkul_asal: str
     id_matkul: int
     nilai_akhir: float
+    mhs_trf_nilai_konversi: ShowDataMahasiswaTransfer
+    mhs_trf_nilai_konversi_matkul: ShowDataMatkul
 
     class Config():
         orm_mode = True

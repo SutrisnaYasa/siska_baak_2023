@@ -5,6 +5,8 @@ import json
 from sqlalchemy import exists, and_
 import datetime
 from schemas.mhs_trf_nilai_konversi import MhsTrfNilaiKonversi as schemasMhsTrfNilaiKonversi, ShowMhsTrfNilaiKonversi as schemasShowMhsTrfNilaiKonversi
+from schemas.mahasiswa_transfer import ShowDataMahasiswaTransfer as schemasShowDataMahasiswaTransfer
+from schemas.matkul import ShowDataMatkul as schemasShowDataMatkul
 from models.mhs_trf_nilai_konversi import MhsTrfNilaiKonversi as modelsMhsTrfNilaiKonversi
 from models.matkul import Matkul as modelsMatkul
 from models.mahasiswa_transfer import MahasiswaTransfer as modelsMahasiswaTransfer
@@ -21,6 +23,13 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNilaiKon
             response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Masih Kosong"
     except Exception as e:
         response["msg"] = str(e)
+    data_all = []
+    for mhs_trf in response["data"]:
+        mhs_tf_data = schemasShowMhsTrfNilaiKonversi.from_orm(mhs_trf)
+        mhs_tf_data.mhs_trf_nilai_konversi = schemasShowDataMahasiswaTransfer.from_orm(mhs_trf.mhs_trf_nilai_konversi)
+        mhs_tf_data.mhs_trf_nilai_konversi_matkul = schemasShowDataMatkul.from_orm(mhs_trf.mhs_trf_nilai_konversi_matkul)
+        data_all.append(mhs_tf_data)
+    response["data"] = data_all
     return {"detail": [response]}
 
 def create(request: schemasMhsTrfNilaiKonversi, db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNilaiKonversi]]:

@@ -32,4 +32,14 @@ class ShowMahasiswaTransfer(BaseModel):
 
     class Config:
         orm_mode = True
+
+# Field yang ditampilkan hanya beberapa saja
+class ShowDataMahasiswaTransfer(BaseModel):
+    # id_mahasiswa: int
+    id_mhs_transfer: int
+    kampus_asal: str
+    nim_asal: str
+
+    class Config:
+        orm_mode = True
 # End Schemas Mahasiswa Transfer
