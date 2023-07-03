@@ -3,6 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 from datetime import date
 import re
+from schemas.dosen_mengajar import ShowDataDosenMengajar
 
 # Schemas Dosen Mengajar Kontrak
 class DosenMengajarKontrakBase(BaseModel):
@@ -33,7 +34,9 @@ class ShowDosenMengajarKontrak(BaseModel):
     bobot_keaktifan: int
     bobot_tugas: int
     deskripsi_kontrak: str
+    mengajar_dosen_kontrak: ShowDataDosenMengajar
 
     class Config():
         orm_mode = True
+        
 # End Schemas Dosen Mengajar Kontrak

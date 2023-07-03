@@ -50,4 +50,14 @@ class ShowDosenMengajar(BaseModel):
 
     class Config():
         orm_mode = True
+
+class ShowDataDosenMengajar(BaseModel):
+    id: int
+    hari: str
+    jam_mulai: str
+    jam_akhir: str
+    mengajar_dosen: ShowDataDosen
+
+    class Config():
+        orm_mode = True
 # End Schemas Dosen Mengajar
