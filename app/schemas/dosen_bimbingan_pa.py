@@ -3,6 +3,8 @@ from typing import List, Optional
 from pydantic import BaseModel, validator
 from datetime import date
 import re
+from schemas.mahasiswa import ShowDataMahasiswa
+from schemas.dosen import ShowDataDosen
 
 # Schemas Dosen Bimbingan PA
 class DosenBimbinganPaBase(BaseModel):
@@ -24,9 +26,11 @@ class DosenBimbinganPa(DosenBimbinganPaBase):
 # Field yang akan ditampilkan
 class ShowDosenBimbinganPa(BaseModel):
     id: int
-    id_dosen: int
-    id_mahasiswa: int
+    # id_dosen: int
+    # id_mahasiswa: int
     status: str
+    dosen_bimbingan_pa_mhs: Optional[ShowDataMahasiswa]
+    dosen_bimbingan_pa_dosen: Optional[ShowDataDosen]
 
     class Config():
         orm_mode = True

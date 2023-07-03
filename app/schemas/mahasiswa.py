@@ -104,3 +104,11 @@ class ShowMahasiswaAll(BaseModel):
     tabel4 : ShowMahasiswaTransfer
     status_aktif: str
 # End Schemas Show Mahasiswa All
+
+# Schemas untuk menampilkan data dosen saat relasi (tidak semua data / beberapa data yang diperlukan saja)
+class ShowDataMahasiswa(BaseModel):
+    id_mahasiswa: int
+    nim: str
+    nama: str
+    class Config():
+        orm_mode = True
