@@ -190,3 +190,20 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulPr
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
+
+def search_by_prasyarat_id(id: int, db: Session) -> Dict[str, Union[bool, str, List[schemasShowMatkulPrasyaratDetail]]]:
+    response = {"status": False, "msg": "", "data": []}
+    try:
+        matkul_prasyarat_detail = db.query(modelsMatkulPrasyaratDetail).filter(
+            modelsMatkulPrasyaratDetail.id_matkul_prasyarat == id,
+            modelsMatkulPrasyaratDetail.deleted_at.is_(None)
+        ).all()
+        if matkul_prasyarat_detail:
+            response["status"] = True
+            response["msg"] = "Data Matkul Prasyarat Detail Berhasil Ditemukan"
+            response["data"] = [schemasShowMatkulPrasyaratDetail.from_orm(mkl) for mkl in matkul_prasyarat_detail]
+        else:
+            response["msg"] = "Data Matkul Prasyarat Detail Tidak Ditemukan"
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}

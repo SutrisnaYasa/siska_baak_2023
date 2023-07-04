@@ -27,6 +27,10 @@ def destroy(id: int, db: Session = Depends(get_db)):
 def update(id: int, request: schemasMatkulPrasyaratDetail, db: Session = Depends(get_db)):
     return matkul_prasyarat_detail.update(id, request, db)
 
+@router.get('/prasyarat/{id}', status_code=status.HTTP_200_OK)
+def search_by_prasyarat_id(id: int, db: Session = Depends(get_db)):
+    return matkul_prasyarat_detail.search_by_prasyarat_id(id, db)
+
 @router.get('/{id}', status_code = status.HTTP_200_OK)
 def show(id: int, db: Session = Depends(get_db)):
     return matkul_prasyarat_detail.show(id, db)
