@@ -25,7 +25,7 @@ class MatkulPrasyaratDetail(MatkulPrasyaratDetailBase):
 # Field yang akan ditampilkan
 class ShowMatkulPrasyaratDetail(BaseModel):
     id: int
-    matkul_prasyarat_detail: ShowDataMatkulPrasyarat
+    relasi_matkul_prasyarat: ShowDataMatkulPrasyarat
     mkl_prasyarat_detail: ShowDataMatkul
 
     class Config():

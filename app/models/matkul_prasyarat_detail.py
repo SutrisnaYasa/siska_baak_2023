@@ -13,6 +13,7 @@ class MatkulPrasyaratDetail(Base):
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
     deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
-    matkul_prasyarat_detail = relationship("MatkulPrasyarat", back_populates = "matkul_prasyarat_details")
     mkl_prasyarat_detail = relationship("Matkul", back_populates = "mkl_prasyarat_details")
+    relasi_matkul_prasyarat = relationship("MatkulPrasyarat", back_populates = "relasi_matkul_prasyarats")
+   
 # End Models Matkul Prasyarat Detail
