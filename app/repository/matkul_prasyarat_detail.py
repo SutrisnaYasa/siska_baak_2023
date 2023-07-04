@@ -27,7 +27,7 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulPrasyara
     for mkl in response["data"]:
         mkl_data = schemasShowMatkulPrasyaratDetail.from_orm(mkl)
         mkl_data.mkl_prasyarat_detail = schemasShowDataMatkul.from_orm(mkl.mkl_prasyarat_detail)
-        mkl_data.matkul_prasyarat_detail = schemasShowDataMatkulPrasyarat.from_orm(mkl.matkul_prasyarat_detail)
+        mkl_data.relasi_matkul_prasyarat = schemasShowDataMatkulPrasyarat.from_orm(mkl.relasi_matkul_prasyarat)
         data_all.append(mkl_data)
     response["data"] = data_all
     return {"detail": [response]}
