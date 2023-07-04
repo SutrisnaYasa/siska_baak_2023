@@ -189,7 +189,8 @@ def get_matkul_prasyarat_by_id_matkul(id_matkul: int, db: Session) -> Dict[str, 
 
                 response["data"].append(mp_data_dict)
         else:
-            response["msg"] = "Data Matkul Prasyarat untuk ID Matkul tersebut tidak ditemukan"
+            response["msg"] = f"Data Matkul Prasyarat untuk ID Matkul {id_matkul} tidak ditemukan"
+            response["data"] = id_matkul 
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
