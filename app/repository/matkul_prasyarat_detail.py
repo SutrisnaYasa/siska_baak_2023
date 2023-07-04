@@ -203,7 +203,14 @@ def search_by_prasyarat_id(id: int, db: Session) -> Dict[str, Union[bool, str, L
             response["msg"] = "Data Matkul Prasyarat Detail Berhasil Ditemukan"
             response["data"] = [schemasShowMatkulPrasyaratDetail.from_orm(mkl) for mkl in matkul_prasyarat_detail]
         else:
-            response["msg"] = "Data Matkul Prasyarat Detail Tidak Ditemukan"
+            response["msg"] = f"Data Matkul Prasyarat Detail Dengan ID {id} Tidak Ditemukan"
+            content = json.dumps({"detail": [response]})
+            return Response(
+                content = content,
+                media_type = "application/json",
+                status_code = status.HTTP_404_NOT_FOUND,
+                headers = {"X-Error": "Data Matkul Prasyarat tidak ditemukan"}
+            )
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

@@ -190,7 +190,14 @@ def get_matkul_prasyarat_by_id_matkul(id_matkul: int, db: Session) -> Dict[str, 
                 response["data"].append(mp_data_dict)
         else:
             response["msg"] = f"Data Matkul Prasyarat untuk ID Matkul {id_matkul} tidak ditemukan"
-            response["data"] = id_matkul 
+            response["data"] = id_matkul
+            content = json.dumps({"detail": [response]})
+            return Response(
+                content = content,
+                media_type = "application/json",
+                status_code = status.HTTP_404_NOT_FOUND,
+                headers = {"X-Error": "Data Matkul Prasyarat tidak ditemukan"}
+            )
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
