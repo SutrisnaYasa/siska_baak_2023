@@ -201,3 +201,49 @@ def get_matkul_prasyarat_by_id_matkul(id_matkul: int, db: Session) -> Dict[str, 
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
+
+def get_matkul_prasyarat_with_detail(id_matkul: int, db: Session) -> Dict[str, Union[bool, str, List[schemasShowMatkulPrasyarat]]]:
+    response = {"status": False, "msg": "", "data": [], "total_id_matkul": 0}
+    try:
+        matkul_prasyarat = db.query(modelsMatkulPrasyarat).filter(
+            modelsMatkulPrasyarat.id_matkul == id_matkul,
+            modelsMatkulPrasyarat.deleted_at == None
+        ).order_by(modelsMatkulPrasyarat.id).all()
+        
+        if matkul_prasyarat:
+            response["status"] = True
+            response["msg"] = "Data Matkul Prasyarat Berhasil Ditemukan"
+            response["total_id_matkul"] = len(matkul_prasyarat)
+
+            for i, mp in enumerate(matkul_prasyarat):
+                mp_data = schemasShowMatkulPrasyarat.from_orm(mp)
+                mp_data_dict = mp_data.dict()
+
+                if i == 0:
+                    mp_data_dict["kondisi"] = "kondisi 1"
+                elif i == len(matkul_prasyarat) - 1:
+                    mp_data_dict["kondisi"] = "kondisi terakhir"
+                else:
+                    mp_data_dict["kondisi"] = f"kondisi {i + 1}"
+
+                # Periksa kondisi syarat_detail
+                if mp.relasi_matkul_prasyarats:
+                    matkul_prasyarat_detail = mp.relasi_matkul_prasyarats[0]
+                    matkul_data = matkul_prasyarat_detail.mkl_prasyarat_detail
+                    mp_data_dict["nama_matkul"] = matkul_data.nama_matkul
+                    mp_data_dict["kode_matkul"] = matkul_data.kode_matkul
+
+                response["data"].append(mp_data_dict)
+        else:
+            response["msg"] = f"Data Matkul Prasyarat untuk ID Matkul {id_matkul} tidak ditemukan"
+            response["data"] = id_matkul
+            content = json.dumps({"detail": [response]})
+            return Response(
+                content=content,
+                media_type="application/json",
+                status_code=status.HTTP_404_NOT_FOUND,
+                headers={"X-Error": "Data Matkul Prasyarat tidak ditemukan"},
+            )
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
