@@ -3,6 +3,7 @@ from database import Base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
+from sqlalchemy.dialects.mysql import TINYINT
 
 # Models Dosen Bimbingan PA
 class DosenBimbinganPa(Base):
@@ -10,7 +11,12 @@ class DosenBimbinganPa(Base):
     id = Column(Integer, primary_key = True, index = True)
     id_dosen = Column(Integer, ForeignKey('dosen.id_dosen', ondelete = "CASCADE", onupdate = "CASCADE"))
     id_mahasiswa = Column(Integer, ForeignKey('mahasiswa.id_mahasiswa', ondelete = "CASCADE", onupdate = "CASCADE"))
-    status = Column(String(100))
+    status = Column(
+        TINYINT,
+        nullable = False,
+        default = 1,
+        comment = 'Status: 0 - Pasif, 1 - Aktif'
+    )
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
     deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)

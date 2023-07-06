@@ -4,7 +4,7 @@ from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
-from schemas.dosen_bimbingan_pa import DosenBimbinganPa as schemasDosenBimbinganPa, ShowDosenBimbinganPa as schemasShowDosenBimbinganPa
+from schemas.dosen_bimbingan_pa import DosenBimbinganPa as schemasDosenBimbinganPa, ShowDosenBimbinganPa as schemasShowDosenBimbinganPa, StatusAktif
 from schemas.mahasiswa import ShowDataMahasiswa
 from schemas.dosen import ShowDataDosen
 from models.dosen_bimbingan_pa import DosenBimbinganPa as modelsDosenBimbinganPa
@@ -26,6 +26,8 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowDosenBimbingan
     data_all = []
     for dosen_bimbingan_pa in response["data"]:
         dosen_bimbingan_pa_data = schemasShowDosenBimbinganPa.from_orm(dosen_bimbingan_pa)
+        # Mengubah value int status menjadi name status
+        dosen_bimbingan_pa_data.status = StatusAktif(dosen_bimbingan_pa_data.status).name
         # Tambahan untuk menampilkan data dosen dan mahasiswa
         dosen_bimbingan_pa_data.dosen_bimbingan_pa_mhs = ShowDataMahasiswa.from_orm(dosen_bimbingan_pa.dosen_bimbingan_pa_mhs)
         dosen_bimbingan_pa_data.dosen_bimbingan_pa_dosen = ShowDataDosen.from_orm(dosen_bimbingan_pa.dosen_bimbingan_pa_dosen)
@@ -69,7 +71,13 @@ def create(request: schemasDosenBimbinganPa, db: Session) -> Dict[str, Union[boo
         db.refresh(new_dosen_bimbingan_pa)
         response["status"] = True
         response["msg"] = "Data Bimbingan Dosen PA Berhasil di Input"
-        response["data"] = schemasShowDosenBimbinganPa.from_orm(new_dosen_bimbingan_pa)
+
+        # Mendapatkan nama status dari enumerasi
+        nama_status = StatusAktif(request.status).name
+        # Mengubah nilai status pada response menjadi nama status
+        dosen_bimbingan_pa_data = schemasShowDosenBimbinganPa.from_orm(new_dosen_bimbingan_pa)
+        dosen_bimbingan_pa_data.status = nama_status
+        response["data"] = dosen_bimbingan_pa_data
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -156,9 +164,12 @@ def update(id: int, request: schemasDosenBimbinganPa, db: Session) -> Dict[str, 
     try:
         dosen_bimbingan_pa.update(request.dict())
         db.commit()
+        updated_dosen_bimbingan_pa = dosen_bimbingan_pa.first()
+        status = StatusAktif(updated_dosen_bimbingan_pa.status).name
         response["status"] = True
         response["msg"] = "Data Bimbingan Dosen PA Berhasil di Update"
-        response["data"] = schemasDosenBimbinganPa.from_orm(dosen_bimbingan_pa.first())
+        response["data"] = schemasShowDosenBimbinganPa.from_orm(updated_dosen_bimbingan_pa)
+        response["data"].status = status
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -189,7 +200,9 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenBim
     try:
         response["status"] = True
         response["msg"] = "Data Bimbingan Dosen PA Berhasil Ditemukan"
-        response["data"] = schemasShowDosenBimbinganPa.from_orm(dosen_bimbingan_pa)
+        dosen_bimbingan_pa_data = schemasShowDosenBimbinganPa.from_orm(dosen_bimbingan_pa)
+        dosen_bimbingan_pa_data.status = StatusAktif(dosen_bimbingan_pa_data.status).name
+        response["data"] = dosen_bimbingan_pa_data
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
