@@ -32,6 +32,48 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulPrasyara
     response["data"] = data_all
     return {"detail": [response]}
 
+# def create(request: schemasMatkulPrasyaratDetail, db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulPrasyaratDetail]]:
+#     response = {"status": False, "msg": "", "data": None}
+#     matkul_exists = db.query(modelsMatkul).filter(
+#         modelsMatkul.id == request.id_syarat,
+#         modelsMatkul.deleted_at.is_(None)
+#     ).first()
+#     if not matkul_exists:
+#         response["msg"] = "Data Matkul tidak tersedia"
+#         content = json.dumps({"detail": [response]})
+#         return Response(
+#             content = content,
+#             media_type = "application/json",
+#             status_code = status.HTTP_404_NOT_FOUND,
+#             headers = {"X-Error": "Data tidak valid"}
+#         )
+    
+#     matkul_prasyarat_detail_exists = db.query(modelsMatkulPrasyarat).filter(
+#         modelsMatkulPrasyarat.id == request.id_matkul_prasyarat,
+#         modelsMatkulPrasyarat.deleted_at.is_(None)
+#     ).first()
+#     if not matkul_prasyarat_detail_exists:
+#         response["msg"] = "Data Matkul Prasyarat tidak tersedia"
+#         content = json.dumps({"detail": [response]})
+#         return Response(
+#             content = content,
+#             media_type = "application/json",
+#             status_code = status.HTTP_404_NOT_FOUND,
+#             headers = {"X-Error": "Data tidak valid"}
+#         )
+
+#     try:
+#         new_matkul_prasyarat_detail = modelsMatkulPrasyaratDetail(** request.dict())
+#         db.add(new_matkul_prasyarat_detail)
+#         db.commit()
+#         db.refresh(new_matkul_prasyarat_detail)
+#         response["status"] = True
+#         response["msg"] = "Data Matkul Prasyarat Detail Berhasil di Input"
+#         response["data"] = schemasShowMatkulPrasyaratDetail.from_orm(new_matkul_prasyarat_detail)
+#     except Exception as e:
+#         response["msg"] = str(e)
+#     return {"detail": [response]}
+
 def create(request: schemasMatkulPrasyaratDetail, db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulPrasyaratDetail]]:
     response = {"status": False, "msg": "", "data": None}
     matkul_exists = db.query(modelsMatkul).filter(
@@ -42,12 +84,12 @@ def create(request: schemasMatkulPrasyaratDetail, db: Session) -> Dict[str, Unio
         response["msg"] = "Data Matkul tidak tersedia"
         content = json.dumps({"detail": [response]})
         return Response(
-            content = content,
-            media_type = "application/json",
-            status_code = status.HTTP_404_NOT_FOUND,
-            headers = {"X-Error": "Data tidak valid"}
+            content=content,
+            media_type="application/json",
+            status_code=status.HTTP_404_NOT_FOUND,
+            headers={"X-Error": "Data tidak valid"}
         )
-    
+
     matkul_prasyarat_detail_exists = db.query(modelsMatkulPrasyarat).filter(
         modelsMatkulPrasyarat.id == request.id_matkul_prasyarat,
         modelsMatkulPrasyarat.deleted_at.is_(None)
@@ -56,14 +98,26 @@ def create(request: schemasMatkulPrasyaratDetail, db: Session) -> Dict[str, Unio
         response["msg"] = "Data Matkul Prasyarat tidak tersedia"
         content = json.dumps({"detail": [response]})
         return Response(
-            content = content,
-            media_type = "application/json",
-            status_code = status.HTTP_404_NOT_FOUND,
-            headers = {"X-Error": "Data tidak valid"}
+            content=content,
+            media_type="application/json",
+            status_code=status.HTTP_404_NOT_FOUND,
+            headers={"X-Error": "Data tidak valid"}
+        )
+
+    # Periksa jika id_matkul di tabel MatkulPrasyarat sama dengan id_syarat di tabel MatkulPrasyaratDetail
+    matkul_prasyarat = db.query(modelsMatkulPrasyarat).get(request.id_matkul_prasyarat)
+    if matkul_prasyarat and matkul_prasyarat.id_matkul == request.id_syarat:
+        response["msg"] = "Matakuliah Syarat Tidak boleh diri sendiri"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content=content,
+            media_type="application/json",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            headers={"X-Error": "Data tidak valid"}
         )
 
     try:
-        new_matkul_prasyarat_detail = modelsMatkulPrasyaratDetail(** request.dict())
+        new_matkul_prasyarat_detail = modelsMatkulPrasyaratDetail(**request.dict())
         db.add(new_matkul_prasyarat_detail)
         db.commit()
         db.refresh(new_matkul_prasyarat_detail)
