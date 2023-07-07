@@ -8,6 +8,7 @@ from schemas.matkul_prasyarat import MatkulPrasyarat as schemasMatkulPrasyarat, 
 from schemas.matkul import ShowDataMatkul as schemasShowDataMatkul
 from models.matkul_prasyarat import MatkulPrasyarat as modelsMatkulPrasyarat
 from models.matkul import Matkul as modelsMatkul
+from models.matkul_prasyarat_detail import MatkulPrasyaratDetail as modelsMatkulPrasyaratDetail
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMatkulPrasyarat]]:
     response = {"status": False, "msg": "", "data": []}
@@ -74,16 +75,23 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             status_code = status.HTTP_404_NOT_FOUND
         content = json.dumps({"detail": [response]})
         return Response(
-            content = content, 
-            media_type = "application/json", 
-            status_code = status_code,
-            headers = {"X-Error": response["msg"]}
+            content=content,
+            media_type="application/json",
+            status_code=status_code,
+            headers={"X-Error": response["msg"]}
         )
     try:
         matkul_prasyarat.update({modelsMatkulPrasyarat.deleted_at: datetime.datetime.now()})
         db.commit()
         response["status"] = True
         response["msg"] = "Data Matkul Prasyarat Berhasil di Hapus"
+        
+        # Update deleted_at in matkul_prasyarat_detail
+        db.query(modelsMatkulPrasyaratDetail).filter(
+            modelsMatkulPrasyaratDetail.id_matkul_prasyarat == existing_matkulprasyarat.id
+        ).update({modelsMatkulPrasyaratDetail.deleted_at: datetime.datetime.now()})
+        
+        db.commit()
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
