@@ -34,6 +34,7 @@ class KurikulumBase(BaseModel):
 class Kurikulum(KurikulumBase):
     class Config():
         orm_mode = True
+        from_attributes = True
 
 # Field yang akan ditampilkan
 class ShowKurikulum(BaseModel):
@@ -50,6 +51,7 @@ class ShowKurikulum(BaseModel):
 
     class Config():
         orm_mode = True
+        from_attributes = True
 
 # Field yang akan ditampilkan untuk relasi ( beberapa field saja )
 class ShowDataKurikulum(BaseModel):
@@ -60,4 +62,5 @@ class ShowDataKurikulum(BaseModel):
 
     class Config():
         orm_mode = True
+        from_attributes = True
 # End Schemas Kurikulum
