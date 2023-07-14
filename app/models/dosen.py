@@ -7,6 +7,7 @@ from models.dosen_alamat import DosenAlamat
 from models.dosen_riwayat_studi import DosenRiwayatStudi
 from models.dosen_jabfung import DosenJabfung
 from models.matkul_kelompok import MatkulKelompok
+from models.dosen_bimbingan_pa import DosenBimbinganPa
 
 # Models Dosen
 class Dosen(Base):
@@ -48,6 +49,8 @@ class Dosen(Base):
     dosen_riwayatstudis = relationship("DosenRiwayatStudi", back_populates = "dosenriwayatstudis")
     dosen_jabfung = relationship("DosenJabfung", back_populates = "dosenjabfungs")
     matkul_klp_dosens = relationship("MatkulKelompok", back_populates = "matkul_klp_dosen")
-    dosen_bimbingan_pa_dosens = relationship("DosenBimbinganPa", back_populates = "dosen_bimbingan_pa_dosen")
+    dosen_bimbingan_pa_dosens_1 = relationship("DosenBimbinganPa", foreign_keys=[DosenBimbinganPa.dosen_pa_1], back_populates="dosen_bimbingan_pa_dosen_1")
+    dosen_bimbingan_pa_dosens_2 = relationship("DosenBimbinganPa", foreign_keys=[DosenBimbinganPa.dosen_pa_2], back_populates="dosen_bimbingan_pa_dosen_2")
+    mengajar_dosens = relationship("DosenMengajar", back_populates="mengajar_dosen")
     mengajar_dosens = relationship("DosenMengajar", back_populates = "mengajar_dosen")
 # End Dosen Models

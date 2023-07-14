@@ -9,17 +9,13 @@ from sqlalchemy.dialects.mysql import TINYINT
 class DosenBimbinganPa(Base):
     __tablename__ = 'dosen_bimbingan_pa'
     id = Column(Integer, primary_key = True, index = True)
-    id_dosen = Column(Integer, ForeignKey('dosen.id_dosen', ondelete = "CASCADE", onupdate = "CASCADE"))
+    dosen_pa_1 = Column(Integer, ForeignKey('dosen.id_dosen', ondelete = "CASCADE", onupdate = "CASCADE"))
+    dosen_pa_2 = Column(Integer, ForeignKey('dosen.id_dosen', ondelete = "CASCADE", onupdate = "CASCADE"))
     id_mahasiswa = Column(Integer, ForeignKey('mahasiswa.id_mahasiswa', ondelete = "CASCADE", onupdate = "CASCADE"))
-    status = Column(
-        TINYINT,
-        nullable = False,
-        default = 1,
-        comment = 'Status: 0 - Pasif, 1 - Aktif'
-    )
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
     deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)
-    dosen_bimbingan_pa_dosen = relationship("Dosen", back_populates = "dosen_bimbingan_pa_dosens")
+    dosen_bimbingan_pa_dosen_1 = relationship("Dosen", foreign_keys=[dosen_pa_1], back_populates="dosen_bimbingan_pa_dosens_1")
+    dosen_bimbingan_pa_dosen_2 = relationship("Dosen", foreign_keys=[dosen_pa_2], back_populates="dosen_bimbingan_pa_dosens_2")
     dosen_bimbingan_pa_mhs = relationship("Mahasiswa", back_populates = "dosen_bimbingan_pa_mhss")
 # End Models Dosen Bimbingan PA

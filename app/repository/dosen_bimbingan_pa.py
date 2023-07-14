@@ -4,7 +4,7 @@ from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
-from schemas.dosen_bimbingan_pa import DosenBimbinganPa as schemasDosenBimbinganPa, ShowDosenBimbinganPa as schemasShowDosenBimbinganPa, StatusAktif
+from schemas.dosen_bimbingan_pa import DosenBimbinganPa as schemasDosenBimbinganPa, ShowDosenBimbinganPa as schemasShowDosenBimbinganPa
 from schemas.mahasiswa import ShowDataMahasiswa
 from schemas.dosen import ShowDataDosen
 from models.dosen_bimbingan_pa import DosenBimbinganPa as modelsDosenBimbinganPa
@@ -26,11 +26,10 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowDosenBimbingan
     data_all = []
     for dosen_bimbingan_pa in response["data"]:
         dosen_bimbingan_pa_data = schemasShowDosenBimbinganPa.from_orm(dosen_bimbingan_pa)
-        # Mengubah value int status menjadi name status
-        dosen_bimbingan_pa_data.status = StatusAktif(dosen_bimbingan_pa_data.status).name
         # Tambahan untuk menampilkan data dosen dan mahasiswa
         dosen_bimbingan_pa_data.dosen_bimbingan_pa_mhs = ShowDataMahasiswa.from_orm(dosen_bimbingan_pa.dosen_bimbingan_pa_mhs)
-        dosen_bimbingan_pa_data.dosen_bimbingan_pa_dosen = ShowDataDosen.from_orm(dosen_bimbingan_pa.dosen_bimbingan_pa_dosen)
+        dosen_bimbingan_pa_data.dosen_bimbingan_pa_dosen_1 = dosen_bimbingan_pa.dosen_bimbingan_pa_dosen_1.id_dosen
+        dosen_bimbingan_pa_data.dosen_bimbingan_pa_dosen_2 = dosen_bimbingan_pa.dosen_bimbingan_pa_dosen_2.id_dosen
         data_all.append(dosen_bimbingan_pa_data)
     response["data"] = data_all
     return {"detail": [response]}
@@ -51,11 +50,11 @@ def create(request: schemasDosenBimbinganPa, db: Session) -> Dict[str, Union[boo
             headers = {"X-Error": "Data tidak valid"}
         )
     
-    dosen_exists= db.query(modelsDosen).filter(
-        modelsDosen.id_dosen == request.id_dosen,
+    dosen_exists = db.query(modelsDosen).filter(
+        modelsDosen.id_dosen.in_([request.dosen_pa_1, request.dosen_pa_2]),
         modelsDosen.deleted_at.is_(None)
-    ).first()
-    if not dosen_exists:
+    ).count()
+    if dosen_exists != 2:
         response["msg"] = "Data Dosen tidak tersedia"
         content = json.dumps({"detail": [response]})
         return Response(
@@ -64,6 +63,7 @@ def create(request: schemasDosenBimbinganPa, db: Session) -> Dict[str, Union[boo
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data tidak valid"}
         )
+        
     try:
         new_dosen_bimbingan_pa = modelsDosenBimbinganPa(** request.dict())
         db.add(new_dosen_bimbingan_pa)
@@ -71,12 +71,7 @@ def create(request: schemasDosenBimbinganPa, db: Session) -> Dict[str, Union[boo
         db.refresh(new_dosen_bimbingan_pa)
         response["status"] = True
         response["msg"] = "Data Bimbingan Dosen PA Berhasil di Input"
-
-        # Mendapatkan nama status dari enumerasi
-        nama_status = StatusAktif(request.status).name
-        # Mengubah nilai status pada response menjadi nama status
         dosen_bimbingan_pa_data = schemasShowDosenBimbinganPa.from_orm(new_dosen_bimbingan_pa)
-        dosen_bimbingan_pa_data.status = nama_status
         response["data"] = dosen_bimbingan_pa_data
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
@@ -128,11 +123,11 @@ def update(id: int, request: schemasDosenBimbinganPa, db: Session) -> Dict[str, 
             headers = {"X-Error": "Data tidak valid"}
         )
     
-    dosen_exists= db.query(modelsDosen).filter(
-        modelsDosen.id_dosen == request.id_dosen,
+    dosen_exists = db.query(modelsDosen).filter(
+        modelsDosen.id_dosen.in_([request.dosen_pa_1, request.dosen_pa_2]),
         modelsDosen.deleted_at.is_(None)
-    ).first()
-    if not dosen_exists:
+    ).count()
+    if dosen_exists != 2:
         response["msg"] = "Data Dosen tidak tersedia"
         content = json.dumps({"detail": [response]})
         return Response(
@@ -141,7 +136,7 @@ def update(id: int, request: schemasDosenBimbinganPa, db: Session) -> Dict[str, 
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data tidak valid"}
         )
-        
+
     dosen_bimbingan_pa = db.query(modelsDosenBimbinganPa).filter(modelsDosenBimbinganPa.id == id)
     if not dosen_bimbingan_pa.first():
         response["msg"] = f"Data Bimbingin Dosen PA dengan id {id} tidak ditemukan"
@@ -165,11 +160,9 @@ def update(id: int, request: schemasDosenBimbinganPa, db: Session) -> Dict[str, 
         dosen_bimbingan_pa.update(request.dict())
         db.commit()
         updated_dosen_bimbingan_pa = dosen_bimbingan_pa.first()
-        status = StatusAktif(updated_dosen_bimbingan_pa.status).name
         response["status"] = True
         response["msg"] = "Data Bimbingan Dosen PA Berhasil di Update"
         response["data"] = schemasShowDosenBimbinganPa.from_orm(updated_dosen_bimbingan_pa)
-        response["data"].status = status
     except ValueError as ve:
         raise HTTPException(status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, detail = str(ve))
     except Exception as e:
@@ -201,7 +194,6 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenBim
         response["status"] = True
         response["msg"] = "Data Bimbingan Dosen PA Berhasil Ditemukan"
         dosen_bimbingan_pa_data = schemasShowDosenBimbinganPa.from_orm(dosen_bimbingan_pa)
-        dosen_bimbingan_pa_data.status = StatusAktif(dosen_bimbingan_pa_data.status).name
         response["data"] = dosen_bimbingan_pa_data
     except Exception as e:
         response["msg"] = str(e)
