@@ -6,6 +6,7 @@ import re
 from schemas.mahasiswa_alamat import ShowMahasiswaAlamat
 from schemas.mahasiswa_ortu import ShowMahasiswaOrtu
 from schemas.mahasiswa_transfer import ShowMahasiswaTransfer
+from schemas.prodi import ShowProdi
 
 # Buat list Enum untuk status aktif mahasiswa
 class StatusAktif(Enum):
@@ -110,5 +111,6 @@ class ShowDataMahasiswa(BaseModel):
     id_mahasiswa: int
     nim: str
     nama: str
+    mhss: ShowProdi
     class Config():
         orm_mode = True

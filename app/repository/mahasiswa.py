@@ -5,7 +5,7 @@ from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
-from schemas.mahasiswa import Mahasiswa as schemasMahasiswa, ShowMahasiswa as schemasShowMahasiswa, ShowMahasiswaAll as schemasShowMahasiswaAll, StatusAktif
+from schemas.mahasiswa import Mahasiswa as schemasMahasiswa, ShowMahasiswa as schemasShowMahasiswa, ShowMahasiswaAll as schemasShowMahasiswaAll, StatusAktif, ShowDataMahasiswa as schemasShowDataMahasiswa
 from schemas.mahasiswa_alamat import MahasiswaAlamat as schemasMahasiswaAlamat, ShowMahasiswaAlamat as schemasShowMahasiswaAlamat
 from schemas.mahasiswa_ortu import MahasiswaOrtu as schemasMahasiswaOrtu, ShowMahasiswaOrtu as schemasShowMahasiswaOrtu
 from schemas.mahasiswa_transfer import MahasiswaTransfer as schemasMahasiswaTransfer, ShowMahasiswaTransfer as schemasShowMahasiswaTransfer
@@ -268,6 +268,25 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasisw
         response["status"] = True
         response["msg"] = "Data Mahasiswa Berhasil Ditemukan"
         response["data"] = result
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
+
+
+def get_all_mahasiswa_optional(db: Session) -> Dict[str, Union[bool, str, schemasShowDataMahasiswa]]:
+    response = {"status": False, "msg": "", "data": []}
+    try:
+        mahasiswa_optional = db.query(
+            modelsMahasiswa
+        ).filter(
+            modelsMahasiswa.deleted_at.is_(None)
+        ).all()
+        if mahasiswa_optional:
+            response["status"] = True
+            response["msg"] = "Data Mahasiswa Berhasil Ditemukan"
+            response["data"] = [schemasShowDataMahasiswa.from_orm(mahasiswa).dict() for mahasiswa in mahasiswa_optional]
+        else:
+            response["msg"] = "Data Mahasiswa Masih Kosong"
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
