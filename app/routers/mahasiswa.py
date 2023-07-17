@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 import database, models
 from sqlalchemy.orm import Session
 from repository import mahasiswa
-from schemas.mahasiswa import Mahasiswa as schemasMahasiswa, ShowMahasiswa as schemasShowMahasiswa, ShowMahasiswaAll as schemasShowMahasiswaAll, ShowDataMahasiswa as schemasShowDataMahasiswa
+from schemas.mahasiswa import Mahasiswa as schemasMahasiswa, ShowMahasiswa as schemasShowMahasiswa, ShowMahasiswaAll as schemasShowMahasiswaAll
 from schemas.mahasiswa_alamat import MahasiswaAlamat as schemasMahasiswaAlamat, ShowMahasiswaAlamat as schemasShowMahasiswaAlamat
 from schemas.mahasiswa_ortu import MahasiswaOrtu as schemasMahasiswaOrtu, ShowMahasiswaOrtu as schemasShowMahasiswaOrtu
 from schemas.mahasiswa_transfer import MahasiswaTransfer as schemasMahasiswaTransfer, ShowMahasiswaTransfer as schemasShowMahasiswaTransfer
@@ -35,6 +35,6 @@ def update(id: int, table_satu: schemasMahasiswa, table_dua: schemasMahasiswaAla
 def show(id: int, db: Session = Depends(get_db)):
     return mahasiswa.show(id, db)
 
-@router.get('/mahasiswa_optional/', status_code=status.HTTP_200_OK)
+@router.get('/mahasiswa_optional/', status_code = status.HTTP_200_OK)
 def get_mahasiswa_optional(db: Session = Depends(get_db)):
     return mahasiswa.get_all_mahasiswa_optional(db)

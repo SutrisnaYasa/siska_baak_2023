@@ -5,7 +5,7 @@ from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
-from schemas.dosen import Dosen as schemasDosen, ShowDosen as schemasShowDosen, ShowDosenAll as schemasShowDosenAll, StatusAktif
+from schemas.dosen import Dosen as schemasDosen, ShowDosen as schemasShowDosen, ShowDosenAll as schemasShowDosenAll, StatusAktif, ShowDataDosen as schemasShowDataDosen
 from schemas.dosen_alamat import DosenAlamat as schemasDosenAlamat, ShowDosenAlamat as schemasShowDosenAlamat
 from schemas.dosen_riwayat_studi import DosenRiwayatStudi as schemasDosenRiwayatStudi, ShowDosenRiwayatStudi as schemasShowDosenRiwayatStudi
 from schemas.dosen_jabfung import DosenJabfung as schemasDosenJabfung, ShowDosenJabfung as schemasShowDosenJabfung
@@ -263,6 +263,24 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenAll
         response["status"] = True
         response["msg"] = "Data Dosen Berhasil Ditemukan"
         response["data"] = result
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
+
+def get_all_dosen_optional(db: Session) -> Dict[str, Union[bool, str, schemasShowDataDosen]]:
+    response = {"status": False, "msg": "", "data": []}
+    try:
+        dosen_optional = db.query(
+            modelsDosen
+        ).filter(
+            modelsDosen.deleted_at.is_(None)
+        ).all()
+        if dosen_optional:
+            response["status"] = True
+            response["msg"] = "Data Dosen Berhasil Ditemukan"
+            response["data"] = [schemasShowDataDosen.from_orm(dosen).dict() for dosen in dosen_optional]
+        else:
+            response["msg"] = "Data Mahasiswa Masih Kosong"
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

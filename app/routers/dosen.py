@@ -34,3 +34,7 @@ def update(id: int, table_satu: schemasDosen, table_dua: schemasDosenAlamat, tab
 @router.get('/{id}', status_code = status.HTTP_200_OK)
 def show(id: int, db: Session = Depends(get_db)):
     return dosen.show(id, db)
+
+@router.get('/dosen_optional/', status_code = status.HTTP_200_OK)
+def get_dosen_optional(db: Session = Depends(get_db)):
+    return dosen.get_all_dosen_optional(db)
