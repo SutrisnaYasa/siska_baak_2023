@@ -12,6 +12,8 @@ from models.matkul import Matkul as modelsMatkul
 from models.prodi import Prodi as modelsProdi
 from models.kurikulum import Kurikulum as modelsKurikulum
 from models.matkul_kelompok import MatkulKelompok as modelsMatkulKelompok
+from models.matkul_prasyarat import MatkulPrasyarat as modelsMatkulPrasyarat
+from models.matkul_prasyarat_detail import MatkulPrasyaratDetail as modelsMatkulPrasyaratDetail
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMatkul]]:
     response = {"status": False, "msg": "", "data": []}
@@ -101,6 +103,34 @@ def create(request: schemasMatkul, db: Session) -> Dict[str, Union[bool, str, sc
         response["msg"] = str(e)
     return {"detail": [response]}
 
+# def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
+#     response = {"status": False, "msg": ""}
+#     matkul = db.query(modelsMatkul).filter(modelsMatkul.id == id, modelsMatkul.deleted_at.is_(None))
+
+#     existing_matkul = matkul.first()
+#     if not existing_matkul:
+#         if db.query(modelsMatkul).filter(modelsMatkul.id == id).first():
+#             response["msg"] = f"Data Matkul dengan id {id} sudah dihapus"
+#             status_code = status.HTTP_400_BAD_REQUEST
+#         else:
+#             response["msg"] = f"Data Matkul dengan id {id} tidak ditemukan"
+#             status_code = status.HTTP_404_NOT_FOUND
+#         content = json.dumps({"detail": [response]})
+#         return Response(
+#             content = content,
+#             media_type = "application/json",
+#             status_code = status_code,
+#             headers = {"X-Error": response["msg"]}
+#         )
+#     try:
+#         matkul.update({modelsMatkul.deleted_at: datetime.datetime.now()})
+#         db.commit()
+#         response["status"] = True
+#         response["msg"] = "Data Matkul Berhasil di Hapus"
+#     except Exception as e:
+#         response["msg"] = str(e)
+#     return {"detail": [response]}
+
 def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     response = {"status": False, "msg": ""}
     matkul = db.query(modelsMatkul).filter(modelsMatkul.id == id, modelsMatkul.deleted_at.is_(None))
@@ -121,7 +151,22 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             headers = {"X-Error": response["msg"]}
         )
     try:
+        # Deleted di tabel matkul
         matkul.update({modelsMatkul.deleted_at: datetime.datetime.now()})
+
+        # Deleted di tabel matkul prasyarat
+        db.query(modelsMatkulPrasyarat).filter(
+            modelsMatkulPrasyarat.id_matkul == existing_matkul.id
+        ).update({modelsMatkulPrasyarat.deleted_at: datetime.datetime.now()})
+
+        # Hapus data terkait dari tabel matkul_prasyarat_detail menggunakan subquery
+        subquery = db.query(modelsMatkulPrasyarat.id).filter(
+            modelsMatkulPrasyarat.id_matkul == existing_matkul.id
+        )
+        db.query(modelsMatkulPrasyaratDetail).filter(
+            modelsMatkulPrasyaratDetail.id_matkul_prasyarat.in_(subquery)
+        ).update({modelsMatkulPrasyaratDetail.deleted_at: datetime.datetime.now()})
+
         db.commit()
         response["status"] = True
         response["msg"] = "Data Matkul Berhasil di Hapus"
