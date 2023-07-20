@@ -36,13 +36,28 @@ def create(request: schemasDosenMengajarKontrak, db: Session) -> Dict[str, Union
         modelsDosenMengajar.deleted_at.is_(None)
     ).first()
     if not dosen_mengajar_exists:
-        response["msg"] = "Data Kontrak Mengajar Dosen tidak tersedia"
+        response["msg"] = "Data Dosen Mengajar Tidak Tersedia"
         content = json.dumps({"detail": [response]})
         return Response(
             content = content,
             media_type = "application/json",
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data tidak valid"}
+        )
+    # Check jika id_dosen_mengajar sudah dipakai dan not deleted di DosenMengajarKontrak
+    dosen_mengajar_kontrak_exists = db.query(modelsDosenMengajarKontrak).filter(
+        modelsDosenMengajarKontrak.id_dosen_mengajar == request.id_dosen_mengajar,
+        modelsDosenMengajarKontrak.deleted_at.is_(None)
+    ).first()
+    
+    if dosen_mengajar_kontrak_exists:
+        response["msg"] = "Data Kontrak Mengajar Dosen Sudah Tersedia"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content=content,
+            media_type="application/json",
+            status_code=status.HTTP_409_CONFLICT,
+            headers={"X-Error": "Data tidak valid"}
         )
     try:
         new_dosen_mengajar_kontrak = modelsDosenMengajarKontrak(** request.dict())

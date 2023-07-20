@@ -14,6 +14,7 @@ from models.dosen import Dosen as modelsDosen
 from models.matkul import Matkul as modelsMatkul
 from models.ruangan import Ruangan as modelsRuangan
 from models.tahun_ajar import TahunAjar as modelsTahunAjar
+from models.dosen_mengajar_kontrak import DosenMengajarKontrak as modelsDosenMengajarKontrak
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMengajar]]:
     response = {"status": False, "msg": "", "data": []}
@@ -113,10 +114,10 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     existing_dosen_mengajar = dosen_mengajar.first()
     if not existing_dosen_mengajar:
         if db.query(modelsDosenMengajar).filter(modelsDosenMengajar.id == id).first():
-            response["msg"] = f"Data Ruangan dengan id {id} sudah dihapus"
+            response["msg"] = f"Data Dosen Mengajar dengan id {id} sudah dihapus"
             status_code = status.HTTP_400_BAD_REQUEST
         else:
-            response["msg"] = f"Data Ruangan dengan id {id} tidak ditemukan"
+            response["msg"] = f"Data Dosen Mengajar dengan id {id} tidak ditemukan"
             status_code = status.HTTP_404_NOT_FOUND
         content = json.dumps({"detail": [response]})
         return Response(
@@ -130,6 +131,12 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         db.commit()
         response["status"] = True
         response["msg"] = "Data Mengajar Dosen Berhasil di Hapus"
+
+        # Perbarui nilai deleted_at pada tabel dosen_mengajar_kontrak
+        db.query(modelsDosenMengajarKontrak).filter(
+            modelsDosenMengajarKontrak.id_dosen_mengajar == existing_dosen_mengajar.id
+        ).update({modelsDosenMengajarKontrak.deleted_at: datetime.datetime.now()})
+        db.commit()
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
