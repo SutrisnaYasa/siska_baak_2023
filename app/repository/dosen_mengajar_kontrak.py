@@ -160,3 +160,29 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMen
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
+
+def get_dosen_mengajar_kontrak_by_id_dosen_mengajar(id: int, db: Session) -> Dict[str, Union[bool, str, List[schemasShowDosenMengajarKontrak]]]:
+    response = {"status": False, "msg": "", "data": []}
+    try:
+        dosen_mengajar_kontrak = db.query(modelsDosenMengajarKontrak).filter(
+            modelsDosenMengajarKontrak.id_dosen_mengajar == id,
+            modelsDosenMengajarKontrak.deleted_at == None
+        ).all()
+
+        if dosen_mengajar_kontrak:
+            response["status"] = True
+            response["msg"] = "Data Kontrak Mengajar Dosen Berhasil Ditemukan"
+            response["data"] = [schemasShowDosenMengajarKontrak.from_orm(dosen).dict() for dosen in dosen_mengajar_kontrak]
+        else:
+            response["msg"] = f"Data Kontrak Mengajar Dosen Dengan ID Dosen Mengajar {id} Tidak Ditemukan"
+            content = json.dumps({"detail": [response]})
+            return Response(
+                content = content,
+                media_type = "application/json",
+                status_code = status.HTTP_404_NOT_FOUND,
+                headers = {"X-Error": "Data Kontrak Dosen Mengajar Tidak Ditemukan"}
+            )
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
+    
