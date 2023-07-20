@@ -128,15 +128,14 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
         )
     try:
         dosen_mengajar.update({modelsDosenMengajar.deleted_at: datetime.datetime.now()})
-        db.commit()
-        response["status"] = True
-        response["msg"] = "Data Mengajar Dosen Berhasil di Hapus"
 
         # Perbarui nilai deleted_at pada tabel dosen_mengajar_kontrak
         db.query(modelsDosenMengajarKontrak).filter(
             modelsDosenMengajarKontrak.id_dosen_mengajar == existing_dosen_mengajar.id
         ).update({modelsDosenMengajarKontrak.deleted_at: datetime.datetime.now()})
         db.commit()
+        response["status"] = True
+        response["msg"] = "Data Mengajar Dosen Berhasil di Hapus"
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
