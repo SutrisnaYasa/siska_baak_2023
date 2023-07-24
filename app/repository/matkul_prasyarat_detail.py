@@ -115,6 +115,22 @@ def create(request: schemasMatkulPrasyaratDetail, db: Session) -> Dict[str, Unio
             status_code=status.HTTP_400_BAD_REQUEST,
             headers={"X-Error": "Data tidak valid"}
         )
+    
+    # Cek apakah id_syarat sudah pernah diinput untuk id_matkul_prasyarat tertentu
+    existing_prasyarat = db.query(modelsMatkulPrasyaratDetail).filter(
+        modelsMatkulPrasyaratDetail.id_syarat == request.id_syarat,
+        modelsMatkulPrasyaratDetail.id_matkul_prasyarat == request.id_matkul_prasyarat,
+        modelsMatkulPrasyaratDetail.deleted_at.is_(None)
+    ).first()
+    if existing_prasyarat:
+        response["msg"] = "Syarat sudah pernah diinput"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content=content,
+            media_type="application/json",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            headers={"X-Error": "Data tidak valid"}
+        )
 
     try:
         new_matkul_prasyarat_detail = modelsMatkulPrasyaratDetail(**request.dict())
