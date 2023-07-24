@@ -31,6 +31,23 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMengajarK
 
 def create(request: schemasDosenMengajarKontrak, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMengajarKontrak]]:
     response = {"status": False, "msg": "", "data": None}
+
+    # Hitung total kontrak kuliah sebelum diinput ke database
+    total_bobot_kontrak = request.bobot_uas + request.bobot_uts + request.bobot_tugas + request.bobot_keaktifan
+    if total_bobot_kontrak != 100:
+        if total_bobot_kontrak < 100:
+            response["msg"] = "Total Kontrak Kurang dari 100%"
+        else:
+            response["msg"] = "Total Kontrak Lebih dari 100%"
+        
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content=content,
+            media_type="application/json",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            headers={"X-Error": "Data tidak valid"}
+        )
+
     dosen_mengajar_exists = db.query(modelsDosenMengajar).filter(
         modelsDosenMengajar.id == request.id_dosen_mengajar,
         modelsDosenMengajar.deleted_at.is_(None)
