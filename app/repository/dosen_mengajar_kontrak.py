@@ -42,12 +42,13 @@ def create(request: schemasDosenMengajarKontrak, db: Session) -> Dict[str, Union
         
         content = json.dumps({"detail": [response]})
         return Response(
-            content=content,
-            media_type="application/json",
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            headers={"X-Error": "Data tidak valid"}
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_422_UNPROCESSABLE_ENTITY,
+            headers = {"X-Error": "Data tidak valid"}
         )
 
+    # Cek data dosen mengajar available atau tidak
     dosen_mengajar_exists = db.query(modelsDosenMengajar).filter(
         modelsDosenMengajar.id == request.id_dosen_mengajar,
         modelsDosenMengajar.deleted_at.is_(None)
@@ -61,6 +62,7 @@ def create(request: schemasDosenMengajarKontrak, db: Session) -> Dict[str, Union
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data tidak valid"}
         )
+        
     # Check jika id_dosen_mengajar sudah dipakai dan not deleted di DosenMengajarKontrak
     dosen_mengajar_kontrak_exists = db.query(modelsDosenMengajarKontrak).filter(
         modelsDosenMengajarKontrak.id_dosen_mengajar == request.id_dosen_mengajar,
