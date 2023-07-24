@@ -62,7 +62,7 @@ def create(request: schemasDosenMengajarKontrak, db: Session) -> Dict[str, Union
             status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data tidak valid"}
         )
-        
+
     # Check jika id_dosen_mengajar sudah dipakai dan not deleted di DosenMengajarKontrak
     dosen_mengajar_kontrak_exists = db.query(modelsDosenMengajarKontrak).filter(
         modelsDosenMengajarKontrak.id_dosen_mengajar == request.id_dosen_mengajar,
@@ -122,6 +122,23 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
 
 def update(id: int, request: schemasDosenMengajarKontrak, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMengajarKontrak]]:
     response = {"status": False, "msg": "", "data": None}
+    
+    # Hitung total kontrak kuliah sebelum diinput ke database
+    total_bobot_kontrak = request.bobot_uas + request.bobot_uts + request.bobot_tugas + request.bobot_keaktifan
+    if total_bobot_kontrak != 100:
+        if total_bobot_kontrak < 100:
+            response["msg"] = "Total Kontrak Kurang dari 100%"
+        else:
+            response["msg"] = "Total Kontrak Lebih dari 100%"
+        
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_422_UNPROCESSABLE_ENTITY,
+            headers = {"X-Error": "Data tidak valid"}
+        )
+
     dosen_mengajar_exists = db.query(modelsDosenMengajar).filter(
         modelsDosenMengajar.id == request.id_dosen_mengajar,
         modelsDosenMengajar.deleted_at.is_(None)
