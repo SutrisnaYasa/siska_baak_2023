@@ -30,3 +30,7 @@ def update(id: int, request: schemasMatkul, db: Session = Depends(get_db)):
 @router.get('/{id}', status_code = status.HTTP_200_OK)
 def show(id: int, db: Session = Depends(get_db)):
     return matkul.show(id, db)
+
+@router.get('/mk_kurikulum_aktif/', status_code = status.HTTP_200_OK)
+def matkul_filter_kurikulum_aktif(db: Session = Depends(get_db)):
+    return matkul.matkul_filter_kurikulum_aktif(db)

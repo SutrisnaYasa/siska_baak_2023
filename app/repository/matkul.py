@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status, Response
 from typing import List, Dict, Union
 import json
@@ -284,4 +284,31 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMatkul]]
         response["data"] = matkul_data
     except Exception as e:
         response["msg"] = str(e)
+    return {"detail": [response]}
+
+def matkul_filter_kurikulum_aktif(db: Session) -> Dict[str, Union[bool, str, schemasShowMatkul]]:
+    response = {"status": False, "msg": "", "data": []}
+    try:
+        matkul_all = db.query(modelsMatkul).join(modelsMatkul.matkul_kurikulums).filter(
+            modelsMatkul.deleted_at == None, #filter berdasarkan data yg belum di hapus/deleted_at 
+            modelsKurikulum.status_aktif == 1 #filter berdasarkan kurikulum dengan status aktif
+        ).options(joinedload(modelsMatkul.matkul_kurikulums)).all() #lakukan join dengan tabel kurikulum
+        if matkul_all:
+            response["status"] = True
+            response["msg"] = "Data Matkul Berhasil Ditemukan"
+            response["data"] = matkul_all
+        else:
+            response["msg"] = "Data Matkul Masih Kosong"
+    except Exception as e:
+        response["msg"] = str(e)
+    data_all = []
+    for matkul in response["data"]:
+        matkul_data = schemasShowMatkul.from_orm(matkul)
+        matkul_data.matkul_prodis = schemasShowDataProdi.from_orm(matkul.matkul_prodis)
+        matkul_data.matkul_kurikulums = schemasShowDataKurikulum.from_orm(matkul.matkul_kurikulums)
+        matkul_data.matkul_kelompoks = schemasShowDataMatkulKelompok.from_orm(matkul.matkul_kelompoks)
+        # Mengubah nilai status_aktif menjadi string sesuai dengan nama enumerasi
+        matkul_data.status_aktif = StatusAktif(matkul_data.status_aktif).name
+        data_all.append(matkul_data)
+    response["data"] = data_all
     return {"detail": [response]}
