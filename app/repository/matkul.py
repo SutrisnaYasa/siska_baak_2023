@@ -154,7 +154,8 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
     try:
         # Periksa apakah id_matkul masih digunakan di matkul_prasyarat_detail
         is_prerequisite = db.query(modelsMatkulPrasyaratDetail).filter(
-            modelsMatkulPrasyaratDetail.id_syarat == existing_matkul.id
+            modelsMatkulPrasyaratDetail.id_syarat == existing_matkul.id,
+            modelsMatkulPrasyaratDetail.deleted_at.is_(None)
         ).first()
 
         if is_prerequisite:
