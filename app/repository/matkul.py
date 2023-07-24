@@ -150,7 +150,24 @@ def destroy(id: int, db: Session) -> Dict[str, Union[bool, str]]:
             status_code = status_code,
             headers = {"X-Error": response["msg"]}
         )
+
     try:
+        # Periksa apakah id_matkul masih digunakan di matkul_prasyarat_detail
+        is_prerequisite = db.query(modelsMatkulPrasyaratDetail).filter(
+            modelsMatkulPrasyaratDetail.id_syarat == existing_matkul.id
+        ).first()
+
+        if is_prerequisite:
+            response["msg"] = "Matakuliah Tidak Dapat Dihapus Karena Masih Menjadi Syarat (Prerequisite)"
+            status_code = status.HTTP_400_BAD_REQUEST
+            content = json.dumps({"detail": [response]})
+            return Response(
+                content=content,
+                media_type="application/json",
+                status_code=status_code,
+                headers={"X-Error": response["msg"]}
+            )
+
         # Deleted di tabel matkul
         matkul.update({modelsMatkul.deleted_at: datetime.datetime.now()})
 
