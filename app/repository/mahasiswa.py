@@ -212,8 +212,9 @@ def update(id: int, table_satu: schemasMahasiswa, table_dua: schemasMahasiswaAla
         existing_mahasiswa = db.query(modelsMahasiswa).filter(
             modelsMahasiswa.nim == table_satu.nim,
             modelsMahasiswa.deleted_at.is_(None)
-        ).first()
-        if existing_mahasiswa and existing_mahasiswa.id_mahasiswa != id:
+        ).filter(modelsMahasiswa.id_mahasiswa != id).first()
+
+        if existing_mahasiswa:
             response["msg"] = "Nim Sudah Ada"
             content = json.dumps({"detail": [response]})
             return Response(
@@ -222,10 +223,31 @@ def update(id: int, table_satu: schemasMahasiswa, table_dua: schemasMahasiswaAla
                 status_code = status.HTTP_409_CONFLICT,
                 headers = {"X-Error": "Data Conflict"}
             )
+
+        # Update data mahasiswa satu per satu
         db.query(modelsMahasiswa).filter(modelsMahasiswa.id_mahasiswa == id ).update(table_satu.dict())
         db.query(modelsMahasiswaAlamat).filter(modelsMahasiswaAlamat.id_mahasiswa == id).update(table_dua.dict())
         db.query(modelsMahasiswaOrtu).filter(modelsMahasiswaOrtu.id_mahasiswa == id).update(table_tiga.dict())
-        db.query(modelsMahasiswaTransfer).filter(modelsMahasiswaTransfer.id_mahasiswa == id).update(table_empat.dict())
+
+        # Update or add data mahasiswa transfer based on table_empat.is_transfer
+        existing_transfer = db.query(modelsMahasiswaTransfer).filter(
+            modelsMahasiswaTransfer.id_mahasiswa == id
+        ).first()
+
+        if table_satu.is_transfer:
+            if existing_transfer:
+                db.query(modelsMahasiswaTransfer).filter(
+                    modelsMahasiswaTransfer.id_mahasiswa == id
+                ).update(table_empat.dict())
+            else:
+                new_data4 = modelsMahasiswaTransfer(**table_empat.dict())
+                new_data4.id_mahasiswa = id
+                db.add(new_data4)
+        else:
+            if existing_transfer:
+                db.query(modelsMahasiswaTransfer).filter(
+                    modelsMahasiswaTransfer.id_mahasiswa == id
+                ).delete()
 
         db.commit()
         response["status"] = True
