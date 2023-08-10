@@ -111,6 +111,13 @@ class ShowDataMahasiswa(BaseModel):
     id_mahasiswa: int
     nim: str
     nama: str
+    angkatan: str
     mhss: ShowProdi
     class Config():
         orm_mode = True
+
+# Schemas untuk Show Data Mahasiswa pada endpoint get Mahasiwa_trf/Transfer
+class ShowMahasiswaTrf(BaseModel):
+    tabel1 : ShowDataMahasiswa
+    tabel4 : ShowMahasiswaTransfer
+# End Schemas Show Mahasiswa All

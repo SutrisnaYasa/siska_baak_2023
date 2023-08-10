@@ -38,3 +38,7 @@ def show(id: int, db: Session = Depends(get_db)):
 @router.get('/mahasiswa_optional/', status_code = status.HTTP_200_OK)
 def get_mahasiswa_optional(db: Session = Depends(get_db)):
     return mahasiswa.get_all_mahasiswa_optional(db)
+
+@router.get('/mahasiswa_trf/', status_code = status.HTTP_200_OK)
+def get_mahasiswa_trf(db: Session = Depends(get_db)):
+    return mahasiswa.get_mahasiswa_trf(db)

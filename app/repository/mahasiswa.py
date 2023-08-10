@@ -5,7 +5,7 @@ from typing import List, Dict, Union
 import json
 from sqlalchemy import exists, and_
 import datetime
-from schemas.mahasiswa import Mahasiswa as schemasMahasiswa, ShowMahasiswa as schemasShowMahasiswa, ShowMahasiswaAll as schemasShowMahasiswaAll, StatusAktif, ShowDataMahasiswa as schemasShowDataMahasiswa
+from schemas.mahasiswa import Mahasiswa as schemasMahasiswa, ShowMahasiswa as schemasShowMahasiswa, ShowMahasiswaAll as schemasShowMahasiswaAll, StatusAktif, ShowDataMahasiswa as schemasShowDataMahasiswa, ShowMahasiswaTrf as schemasShowMahasiswaTrf
 from schemas.mahasiswa_alamat import MahasiswaAlamat as schemasMahasiswaAlamat, ShowMahasiswaAlamat as schemasShowMahasiswaAlamat
 from schemas.mahasiswa_ortu import MahasiswaOrtu as schemasMahasiswaOrtu, ShowMahasiswaOrtu as schemasShowMahasiswaOrtu
 from schemas.mahasiswa_transfer import MahasiswaTransfer as schemasMahasiswaTransfer, ShowMahasiswaTransfer as schemasShowMahasiswaTransfer
@@ -287,6 +287,36 @@ def get_all_mahasiswa_optional(db: Session) -> Dict[str, Union[bool, str, schema
             response["data"] = [schemasShowDataMahasiswa.from_orm(mahasiswa).dict() for mahasiswa in mahasiswa_optional]
         else:
             response["msg"] = "Data Mahasiswa Masih Kosong"
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
+
+def get_mahasiswa_trf(db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaTrf]]:
+    response = {"status": False, "msg": "", "data": []}
+    try:
+        mahasiswa_trf = db.query(
+            modelsMahasiswa,
+            modelsMahasiswaTransfer
+        ).join(
+            modelsMahasiswaTransfer,
+            modelsMahasiswa.id_mahasiswa == modelsMahasiswaTransfer.id_mahasiswa
+        ).filter(
+            modelsMahasiswa.deleted_at.is_(None),
+            modelsMahasiswaTransfer.deleted_at.is_(None)
+        ).all()
+
+        result = []
+        for tabel1, tabel4 in mahasiswa_trf:
+            result.append(schemasShowMahasiswaTrf(
+                tabel1 = tabel1,
+                tabel4 = tabel4
+            ))
+        if mahasiswa_trf:
+            response["status"] = True
+            response["msg"] = "Data Mahasiswa Transfer Berhasil Ditemukan"
+            response["data"] = result
+        else:
+            response["msg"] = "Data Mahasiswa Transfer Masih Kosong"
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
