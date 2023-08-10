@@ -306,10 +306,10 @@ def get_mahasiswa_trf(db: Session) -> Dict[str, Union[bool, str, schemasShowMaha
         ).all()
 
         result = []
-        for tabel1, tabel4 in mahasiswa_trf:
+        for tabel1, tabel2 in mahasiswa_trf:
             result.append(schemasShowMahasiswaTrf(
                 tabel1 = tabel1,
-                tabel4 = tabel4
+                tabel2 = tabel2
             ))
         if mahasiswa_trf:
             response["status"] = True
@@ -317,6 +317,43 @@ def get_mahasiswa_trf(db: Session) -> Dict[str, Union[bool, str, schemasShowMaha
             response["data"] = result
         else:
             response["msg"] = "Data Mahasiswa Transfer Masih Kosong"
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
+
+def show_mhs_trf(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaTrf]]:
+    response = {"status": False, "msg": "", "data": None}
+    mahasiswa_trf = db.query(modelsMahasiswa, modelsMahasiswaTransfer).\
+    join(modelsMahasiswaTransfer, modelsMahasiswa.id_mahasiswa == modelsMahasiswaTransfer.id_mahasiswa).\
+    filter(modelsMahasiswaTransfer.id_mhs_transfer == id).\
+    first()
+    if not mahasiswa_trf:
+        response["msg"] = f"Data Mahasiswa Transfer dengan id {id} tidak ditemukan"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data Mahasiswa Transfer tidak ditemukan"}
+        )
+    if mahasiswa_trf[1].deleted_at is not None:
+        response["msg"] = f"Data Mahasiswa Transfer dengan id {id} sudah dihapus"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_400_BAD_REQUEST,
+            headers = {"X-Error": "Data Mahasiswa Transfer sudah dihapus"}
+        )
+    result = schemasShowMahasiswaTrf(
+        tabel1 = mahasiswa_trf[0],
+        tabel2 = mahasiswa_trf[1],
+    )
+
+    try:
+        response["status"] = True
+        response["msg"] = "Data Mahasiswa Transfer Berhasil Ditemukan"
+        response["data"] = result
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

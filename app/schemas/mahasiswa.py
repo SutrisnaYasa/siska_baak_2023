@@ -119,5 +119,5 @@ class ShowDataMahasiswa(BaseModel):
 # Schemas untuk Show Data Mahasiswa pada endpoint get Mahasiwa_trf/Transfer
 class ShowMahasiswaTrf(BaseModel):
     tabel1 : ShowDataMahasiswa
-    tabel4 : ShowMahasiswaTransfer
+    tabel2 : ShowMahasiswaTransfer
 # End Schemas Show Mahasiswa All
