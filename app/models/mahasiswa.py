@@ -42,6 +42,7 @@ class Mahasiswa(Base):
     penerima_kps = Column(String(100))
     kebutuhan_khusus = Column(String(100))
     bidang_minat = Column(String(100))
+    is_transfer = Column(Boolean)
     created_at = Column(DateTime(timezone = True), server_default = func.now())
     updated_at = Column(DateTime(timezone = True), onupdate = func.now())
     deleted_at = Column(DateTime(timezone = True), default = None, nullable = True)

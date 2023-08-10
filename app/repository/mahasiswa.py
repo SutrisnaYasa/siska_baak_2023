@@ -29,7 +29,7 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaAll]]
         ).join(
             modelsMahasiswaOrtu, 
             modelsMahasiswa.id_mahasiswa == modelsMahasiswaOrtu.id_mahasiswa
-        ).join(
+        ).outerjoin(
             modelsMahasiswaTransfer, 
             modelsMahasiswa.id_mahasiswa == modelsMahasiswaTransfer.id_mahasiswa
         ).filter(
@@ -42,6 +42,13 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaAll]]
         result = []
         for tabel1, tabel2, tabel3, tabel4 in mahasiswa:
             status_aktif_name = StatusAktif(tabel1.status_aktif).name
+
+            # Periksa apakah tabel4 adalah None, jika ya, beri nilai default atau handle sesuai kebutuhan
+            if tabel4 is None:
+                tabel4_data = {}  # Nilai default atau penanganan khusus jika tabel4 adalah None
+            else:
+                tabel4_data = tabel4
+
             result.append(schemasShowMahasiswaAll(
                 tabel1 = tabel1, 
                 tabel2 = tabel2, 
@@ -102,9 +109,14 @@ def create(table_satu: schemasMahasiswa, table_dua: schemasMahasiswaAlamat, tabl
             new_data3.id_mahasiswa = new_data1.id_mahasiswa
             db.add(new_data3)
 
-            new_data4 = modelsMahasiswaTransfer(** table_empat.dict())
-            new_data4.id_mahasiswa = new_data1.id_mahasiswa
-            db.add(new_data4)
+            # new_data4 = modelsMahasiswaTransfer(** table_empat.dict())
+            # new_data4.id_mahasiswa = new_data1.id_mahasiswa
+            # db.add(new_data4)
+
+            if table_satu.is_transfer:
+                new_data4 = modelsMahasiswaTransfer(** table_empat.dict())
+                new_data4.id_mahasiswa = new_data1.id_mahasiswa
+                db.add(new_data4)
 
             db.commit()
             response["status"] = True
@@ -234,7 +246,7 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasisw
     mahasiswa = db.query(modelsMahasiswa, modelsMahasiswaAlamat, modelsMahasiswaOrtu, modelsMahasiswaTransfer).\
     join(modelsMahasiswaAlamat, modelsMahasiswa.id_mahasiswa == modelsMahasiswaAlamat.id_mahasiswa).\
     join(modelsMahasiswaOrtu, modelsMahasiswa.id_mahasiswa == modelsMahasiswaOrtu.id_mahasiswa).\
-    join(modelsMahasiswaTransfer, modelsMahasiswa.id_mahasiswa == modelsMahasiswaTransfer.id_mahasiswa).\
+    outerjoin(modelsMahasiswaTransfer, modelsMahasiswa.id_mahasiswa == modelsMahasiswaTransfer.id_mahasiswa).\
     filter(modelsMahasiswa.id_mahasiswa == id).\
     first()
     if not mahasiswa:
@@ -256,6 +268,13 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasisw
             headers = {"X-Error": "Data Mahasiswa sudah dihapus"}
         )
     status_aktif_name = StatusAktif(mahasiswa[0].status_aktif).name
+
+    # Periksa apakah tabel4 adalah None, jika ya, beri nilai default atau handle sesuai kebutuhan
+    if mahasiswa[3] is None:
+        tabel4_data = {}  # Nilai default atau penanganan khusus jika tabel4 adalah None
+    else:
+        tabel4_data = mahasiswa[3]
+
     result = schemasShowMahasiswaAll(
         tabel1 = mahasiswa[0],
         tabel2 = mahasiswa[1],

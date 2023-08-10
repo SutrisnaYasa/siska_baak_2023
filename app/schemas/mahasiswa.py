@@ -42,12 +42,13 @@ class MahasiswaBase(BaseModel):
     penerima_kps: str
     kebutuhan_khusus: str
     bidang_minat: str
+    is_transfer: bool
 
     class Config:
         use_enum_values = True
 
     # Validasi field tidak boleh kosong
-    @validator('nim', 'nik', 'nisn', 'nama', 'tempat_lahir', 'jenis_kelamin', 'agama', 'kewarganegaraan', 'sekolah_asal', 'id_prodi', 'status_awal', 'status_aktif', 'angkatan', 'kelas', 'no_hp', 'no_tlp', 'email', 'jenis_tinggal', 'npwp', 'alat_transportasi', 'nomor_kps', 'penerima_kps', 'kebutuhan_khusus', 'bidang_minat')
+    @validator('nim', 'nik', 'nisn', 'nama', 'tempat_lahir', 'jenis_kelamin', 'agama', 'kewarganegaraan', 'sekolah_asal', 'id_prodi', 'status_awal', 'status_aktif', 'angkatan', 'kelas', 'no_hp', 'no_tlp', 'email', 'jenis_tinggal', 'npwp', 'alat_transportasi', 'nomor_kps', 'penerima_kps', 'kebutuhan_khusus', 'bidang_minat', 'is_transfer')
     def check_not_null(cls, value):
         if value is None or value == "":
             raise ValueError('Field tidak boleh kosong')
@@ -92,6 +93,7 @@ class ShowMahasiswa(BaseModel):
     penerima_kps: str
     kebutuhan_khusus: str
     bidang_minat: str
+    is_transfer: bool
 
     class Config:
         orm_mode = True
@@ -102,7 +104,7 @@ class ShowMahasiswaAll(BaseModel):
     tabel1 : ShowMahasiswa
     tabel2 : ShowMahasiswaAlamat
     tabel3 : ShowMahasiswaOrtu
-    tabel4 : ShowMahasiswaTransfer
+    tabel4 : Optional[ShowMahasiswaTransfer]
     status_aktif: str
 # End Schemas Show Mahasiswa All
 
