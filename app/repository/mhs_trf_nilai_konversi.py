@@ -201,19 +201,58 @@ def update(id: int, request: schemasMhsTrfNilaiKonversi, db: Session) -> Dict[st
         response["msg"] = str(e)
     return {"detail": [response]}
 
-def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNilaiKonversi]]:
-    response = {"status": False, "msg": "", "data": None} 
-    mhs_trf_nilai_konversi = db.query(modelsMhsTrfNilaiKonversi).filter(modelsMhsTrfNilaiKonversi.id == id).first()
-    if not mhs_trf_nilai_konversi:
+# def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNilaiKonversi]]:
+#     response = {"status": False, "msg": "", "data": None} 
+#     mhs_trf_nilai_konversi = db.query(modelsMhsTrfNilaiKonversi).filter(modelsMhsTrfNilaiKonversi.id == id).first()
+#     if not mhs_trf_nilai_konversi:
+#         response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} tidak ditemukan"
+#         content = json.dumps({"detail":[response]})
+#         return Response(
+#             content = content, 
+#             media_type = "application/json", 
+#             status_code = status.HTTP_404_NOT_FOUND, 
+#             headers = {"X-Error": "Data Konversi Nilai Mahasiswa Transfer tidak ditemukan"}
+#         )
+#     if mhs_trf_nilai_konversi.deleted_at:
+#         response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} sudah dihapus"
+#         content = json.dumps({"detail": [response]})
+#         return Response(
+#             content = content,
+#             media_type = "application/json",
+#             status_code = status.HTTP_400_BAD_REQUEST,
+#             headers = {"X-Error": "Data Konversi Nilai Mahasiswa Transfer sudah dihapus"}
+#         )
+#     try:
+#         response["status"] = True
+#         response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Berhasil Ditemukan"
+#         response["data"] = schemasShowMhsTrfNilaiKonversi.from_orm(mhs_trf_nilai_konversi)
+#     except Exception as e:
+#         response["msg"] = str(e)
+#     return {"detail": [response]}
+
+def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaTrfKonversiAll]]:
+    response = {"status": False, "msg": "", "data": None}
+    mhs_trf = db.query(
+        modelsMahasiswa,
+        modelsMahasiswaTransfer,
+        modelsMhsTrfNilaiKonversi
+    ).join(
+        modelsMahasiswaTransfer, modelsMahasiswa.id_mahasiswa == modelsMahasiswaTransfer.id_mahasiswa
+    ).join(
+        modelsMhsTrfNilaiKonversi, modelsMahasiswaTransfer.id_mhs_transfer == modelsMhsTrfNilaiKonversi.id_mahasiswa_transfer
+    ).filter(
+        modelsMhsTrfNilaiKonversi.id == id
+    ).first()
+    if not mhs_trf:
         response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} tidak ditemukan"
-        content = json.dumps({"detail":[response]})
+        content = json.dumps({"detail": [response]})
         return Response(
-            content = content, 
-            media_type = "application/json", 
-            status_code = status.HTTP_404_NOT_FOUND, 
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
             headers = {"X-Error": "Data Konversi Nilai Mahasiswa Transfer tidak ditemukan"}
         )
-    if mhs_trf_nilai_konversi.deleted_at:
+    if mhs_trf[2].deleted_at is not None:
         response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id {id} sudah dihapus"
         content = json.dumps({"detail": [response]})
         return Response(
@@ -222,10 +261,16 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNi
             status_code = status.HTTP_400_BAD_REQUEST,
             headers = {"X-Error": "Data Konversi Nilai Mahasiswa Transfer sudah dihapus"}
         )
+    result = schemasShowMahasiswaTrfKonversiAll(
+        tabel1 = mhs_trf[0],
+        tabel2 = mhs_trf[1],
+        tabel3 = mhs_trf[2]
+    )
+
     try:
         response["status"] = True
         response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Berhasil Ditemukan"
-        response["data"] = schemasShowMhsTrfNilaiKonversi.from_orm(mhs_trf_nilai_konversi)
+        response["data"] = result
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
