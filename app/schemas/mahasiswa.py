@@ -7,6 +7,7 @@ from schemas.mahasiswa_alamat import ShowMahasiswaAlamat
 from schemas.mahasiswa_ortu import ShowMahasiswaOrtu
 from schemas.mahasiswa_transfer import ShowMahasiswaTransfer
 from schemas.prodi import ShowProdi
+from schemas.mhs_trf_nilai_konversi import ShowDataMhsTrfNilaiKonversi
 
 # Buat list Enum untuk status aktif mahasiswa
 class StatusAktif(Enum):
@@ -122,4 +123,11 @@ class ShowDataMahasiswa(BaseModel):
 class ShowMahasiswaTrf(BaseModel):
     tabel1 : ShowDataMahasiswa
     tabel2 : ShowMahasiswaTransfer
+
+
+# Schemas untuk Show Data Mahasiswa pada endpoint get mahasiswa nilai konversi
+class ShowMahasiswaTrfKonversiAll(BaseModel):
+    tabel1 : ShowDataMahasiswa
+    tabel2 : ShowMahasiswaTransfer
+    tabel3 : ShowDataMhsTrfNilaiKonversi
 # End Schemas Show Mahasiswa All

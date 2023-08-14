@@ -7,29 +7,67 @@ import datetime
 from schemas.mhs_trf_nilai_konversi import MhsTrfNilaiKonversi as schemasMhsTrfNilaiKonversi, ShowMhsTrfNilaiKonversi as schemasShowMhsTrfNilaiKonversi
 from schemas.mahasiswa_transfer import ShowDataMahasiswaTransfer as schemasShowDataMahasiswaTransfer
 from schemas.matkul import ShowDataMatkul as schemasShowDataMatkul
+from schemas.mahasiswa import ShowMahasiswaTrfKonversiAll as schemasShowMahasiswaTrfKonversiAll
 from models.mhs_trf_nilai_konversi import MhsTrfNilaiKonversi as modelsMhsTrfNilaiKonversi
 from models.matkul import Matkul as modelsMatkul
 from models.mahasiswa_transfer import MahasiswaTransfer as modelsMahasiswaTransfer
+from models.mahasiswa import Mahasiswa as modelsMahasiswa
 
-def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNilaiKonversi]]:
+# def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNilaiKonversi]]:
+#     response = {"status": False, "msg": "", "data": []}
+#     try:
+#         mhs_trf_nilai_konversi_all = db.query(modelsMhsTrfNilaiKonversi).filter(modelsMhsTrfNilaiKonversi.deleted_at == None).all()
+#         if mhs_trf_nilai_konversi_all:
+#             response["status"] = True
+#             response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Berhasil Ditemukan"
+#             response["data"] = mhs_trf_nilai_konversi_all
+#         else:
+#             response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Masih Kosong"
+#     except Exception as e:
+#         response["msg"] = str(e)
+#     data_all = []
+#     for mhs_trf in response["data"]:
+#         mhs_tf_data = schemasShowMhsTrfNilaiKonversi.from_orm(mhs_trf)
+#         mhs_tf_data.mhs_trf_nilai_konversi = schemasShowDataMahasiswaTransfer.from_orm(mhs_trf.mhs_trf_nilai_konversi)
+#         mhs_tf_data.mhs_trf_nilai_konversi_matkul = schemasShowDataMatkul.from_orm(mhs_trf.mhs_trf_nilai_konversi_matkul)
+#         data_all.append(mhs_tf_data)
+#     response["data"] = data_all
+#     return {"detail": [response]}
+
+def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaTrfKonversiAll]]:
     response = {"status": False, "msg": "", "data": []}
     try:
-        mhs_trf_nilai_konversi_all = db.query(modelsMhsTrfNilaiKonversi).filter(modelsMhsTrfNilaiKonversi.deleted_at == None).all()
-        if mhs_trf_nilai_konversi_all:
+        mhs_trf = db.query(
+            modelsMahasiswa,
+            modelsMahasiswaTransfer,
+            modelsMhsTrfNilaiKonversi
+        ).join(
+            modelsMahasiswaTransfer,
+            modelsMahasiswa.id_mahasiswa == modelsMahasiswaTransfer.id_mahasiswa
+        ).join(
+            modelsMhsTrfNilaiKonversi,
+            modelsMahasiswaTransfer.id_mhs_transfer == modelsMhsTrfNilaiKonversi.id_mahasiswa_transfer
+        ).filter(
+            modelsMahasiswa.deleted_at.is_(None),
+            modelsMahasiswaTransfer.deleted_at.is_(None),
+            modelsMhsTrfNilaiKonversi.deleted_at.is_(None)
+        ).all()
+
+        result = []
+        for tabel1, tabel2, tabel3 in mhs_trf:
+            result.append(schemasShowMahasiswaTrfKonversiAll(
+                tabel1 = tabel1,
+                tabel2 = tabel2,
+                tabel3 = tabel3,
+            ))
+        if mhs_trf:
             response["status"] = True
-            response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Berhasil Ditemukan"
-            response["data"] = mhs_trf_nilai_konversi_all
+            response["msg"] = "Data Mahasiswa Berhasil Ditemukan"
+            response["data"] = result
         else:
-            response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Masih Kosong"
+            response["msg"] = "Data Mahasiswa Masih Kosong"
     except Exception as e:
         response["msg"] = str(e)
-    data_all = []
-    for mhs_trf in response["data"]:
-        mhs_tf_data = schemasShowMhsTrfNilaiKonversi.from_orm(mhs_trf)
-        mhs_tf_data.mhs_trf_nilai_konversi = schemasShowDataMahasiswaTransfer.from_orm(mhs_trf.mhs_trf_nilai_konversi)
-        mhs_tf_data.mhs_trf_nilai_konversi_matkul = schemasShowDataMatkul.from_orm(mhs_trf.mhs_trf_nilai_konversi_matkul)
-        data_all.append(mhs_tf_data)
-    response["data"] = data_all
     return {"detail": [response]}
 
 def create(request: schemasMhsTrfNilaiKonversi, db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNilaiKonversi]]:

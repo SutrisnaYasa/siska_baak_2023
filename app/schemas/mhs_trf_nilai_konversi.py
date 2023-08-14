@@ -42,4 +42,18 @@ class ShowMhsTrfNilaiKonversi(BaseModel):
 
     class Config():
         orm_mode = True
+
+class ShowDataMhsTrfNilaiKonversi(BaseModel):
+    id: int
+    id_mahasiswa_transfer: int
+    id_matkul_asal: str
+    nama_matkul_asal: str
+    sks_matkul_asal: int
+    nilai_huruf_matkul_asal: str
+    id_matkul: int
+    nilai_akhir: float
+    mhs_trf_nilai_konversi_matkul: ShowDataMatkul
+    
+    class Config():
+        orm_mode = True
 # End Schemas Mahasiswa Transfer Nilai Konversi
