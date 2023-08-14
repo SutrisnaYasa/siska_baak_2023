@@ -62,10 +62,10 @@ def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaTrfKo
             ))
         if mhs_trf:
             response["status"] = True
-            response["msg"] = "Data Mahasiswa Berhasil Ditemukan"
+            response["msg"] = "Data Konversi Nilai Mahasiswa Berhasil Ditemukan"
             response["data"] = result
         else:
-            response["msg"] = "Data Mahasiswa Masih Kosong"
+            response["msg"] = "Data Konversi Nilai Mahasiswa Masih Kosong"
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
