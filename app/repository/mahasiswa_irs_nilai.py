@@ -9,6 +9,7 @@ from schemas.mahasiswa_irs import ShowDataMahasiswaIrs as schemasShowDataMahasis
 from models.mahasiswa_irs_nilai import MahasiswaIrsNilai as modelsMahasiswaIrsNilai
 from models.mahasiswa_irs import MahasiswaIrs as modelsMahasiswaIrs
 from models.mahasiswa import Mahasiswa as modelsMahasiswa
+from models.dosen_mengajar import DosenMengajar as modelsDosenMengajar
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrsNilai]]:
     response = {"status": False, "msg": "", "data": []}
@@ -190,6 +191,41 @@ def get_by_id_mhs(id: int, db: Session) -> Dict[str, Union[bool, str, schemasSho
         response["status"] = True
         response["msg"] = "Data Nilai IRS Mahasiswa Berhasil Ditemukan"
         response["data"] = [schemasShowMahasiswaIrsNilai.from_orm(mhs_nilai) for mhs_nilai in mhs_nilai_by_id]
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
+
+def get_by_id_mhs_thn_ajar(id: int, id_tahun_ajar: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrsNilai]]:
+    response = {"status": False, "msg": "", "data": None}
+    mhs_nilai_by_id_thn_ajar = db.query(
+        modelsMahasiswaIrsNilai
+    ).join(
+        modelsMahasiswaIrs,
+        modelsMahasiswaIrsNilai.id_mahasiswa_irs == modelsMahasiswaIrs.id
+    ).join(
+        modelsMahasiswa,
+        modelsMahasiswaIrs.id_mahasiswa == modelsMahasiswa.id_mahasiswa
+    ).join(
+        modelsDosenMengajar,  # Add this join
+        modelsMahasiswaIrs.id_dosen_mengajar == modelsDosenMengajar.id
+    ).filter(
+        modelsMahasiswa.id_mahasiswa == id,
+        modelsMahasiswaIrsNilai.deleted_at.is_(None),
+        modelsDosenMengajar.id_tahun_ajar == id_tahun_ajar  # Add this filter
+    ).all()
+    if not mhs_nilai_by_id_thn_ajar:
+        response["msg"] = f"Data Nilai IRS Mahasiswa dengan id Mahasiswa {id} tidak temukan"
+        content = json.dumps({"detail":[response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data Nilai IRS Mahasiswa"}
+        )
+    try:
+        response["status"] = True
+        response["msg"] = "Data Nilai IRS Mahasiswa Berhasil Ditemukan"
+        response["data"] = [schemasShowMahasiswaIrsNilai.from_orm(mhs_nilai) for mhs_nilai in mhs_nilai_by_id_thn_ajar]
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}

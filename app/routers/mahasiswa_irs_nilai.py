@@ -34,3 +34,7 @@ def show(id: int, db: Session = Depends(get_db)):
 @router.get('/get_by_id_mhs/{id}', status_code = status.HTTP_200_OK)
 def get_by_id_mhs(id: int, db: Session = Depends(get_db)):
     return mahasiswa_irs_nilai.get_by_id_mhs(id, db)
+
+@router.get('/get_by_id_mhs_thn_ajar/{id}', status_code = status.HTTP_200_OK)
+def get_by_id_mhs_thn_ajar(id: int, id_tahun_ajar: int, db: Session = Depends(get_db)):
+    return mahasiswa_irs_nilai.get_by_id_mhs_thn_ajar(id, id_tahun_ajar, db)
