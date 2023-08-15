@@ -274,3 +274,26 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasisw
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
+
+def get_by_id_mhs_transfer(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMhsTrfNilaiKonversi]]:
+    response = {"status": False, "msg": "", "data": None}
+    mhs_trf_by_id = db.query(modelsMhsTrfNilaiKonversi).filter(
+        modelsMhsTrfNilaiKonversi.id_mahasiswa_transfer == id,
+        modelsMhsTrfNilaiKonversi.deleted_at.is_(None)
+    ).all()
+    if not mhs_trf_by_id:
+        response["msg"] = f"Data Konversi Nilai Mahasiswa Transfer dengan id Mahasiswa Transfer {id} tidak ditemukan"
+        content = json.dumps({"detail":[response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data Konversi Nilai Mahasiswa Transfer tidak ditemukan"}
+        )
+    try:
+        response["status"] = True
+        response["msg"] = "Data Konversi Nilai Mahasiswa Transfer Berhasil Ditemukan"
+        response["data"] = [schemasShowMhsTrfNilaiKonversi.from_orm(mhs_trf) for mhs_trf in mhs_trf_by_id]
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}

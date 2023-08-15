@@ -30,3 +30,7 @@ def update(id: int, request: schemasMhsTrfNilaiKonversi, db: Session = Depends(g
 @router.get('/{id}', status_code = status.HTTP_200_OK)
 def show(id: int, db: Session = Depends(get_db)):
     return mhs_trf_nilai_konversi.show(id, db)
+
+@router.get('/get_by_id_mhs_transfer/{id}', status_code = status.HTTP_200_OK)
+def get_by_id_mhs_transfer(id: int, db: Session = Depends(get_db)):
+    return mhs_trf_nilai_konversi.get_by_id_mhs_transfer(id, db)
