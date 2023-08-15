@@ -8,6 +8,7 @@ from schemas.mahasiswa_irs_nilai import MahasiswaIrsNilai as schemasMahasiswaIrs
 from schemas.mahasiswa_irs import ShowDataMahasiswaIrs as schemasShowDataMahasiswaIrs
 from models.mahasiswa_irs_nilai import MahasiswaIrsNilai as modelsMahasiswaIrsNilai
 from models.mahasiswa_irs import MahasiswaIrs as modelsMahasiswaIrs
+from models.mahasiswa import Mahasiswa as modelsMahasiswa
 
 def get_all(db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrsNilai]]:
     response = {"status": False, "msg": "", "data": []}
@@ -158,6 +159,37 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasisw
         response["status"] = True
         response["msg"] = "Data IRS Mahasiswa Berhasil Ditemukan"
         response["data"] = schemasShowMahasiswaIrsNilai.from_orm(mahasiswa_irs_nilai)
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
+
+def get_by_id_mhs(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrsNilai]]:
+    response = {"status": False, "msg": "", "data": None}
+    mhs_nilai_by_id = db.query(
+        modelsMahasiswaIrsNilai
+    ).join(
+        modelsMahasiswaIrs,
+        modelsMahasiswaIrsNilai.id_mahasiswa_irs == modelsMahasiswaIrs.id
+    ).join(
+        modelsMahasiswa,
+        modelsMahasiswaIrs.id_mahasiswa == modelsMahasiswa.id_mahasiswa
+    ).filter(
+        modelsMahasiswa.id_mahasiswa == id,
+        modelsMahasiswaIrsNilai.deleted_at.is_(None)
+    ).all()
+    if not mhs_nilai_by_id:
+        response["msg"] = f"Data Nilai IRS Mahasiswa dengan id Mahasiswa {id} tidak temukan"
+        content = json.dumps({"detail":[response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data Nilai IRS Mahasiswa"}
+        )
+    try:
+        response["status"] = True
+        response["msg"] = "Data Nilai IRS Mahasiswa Berhasil Ditemukan"
+        response["data"] = [schemasShowMahasiswaIrsNilai.from_orm(mhs_nilai) for mhs_nilai in mhs_nilai_by_id]
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
