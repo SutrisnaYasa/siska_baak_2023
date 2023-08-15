@@ -30,3 +30,7 @@ def update(id: int, request: schemasMahasiswaIrs, db: Session = Depends(get_db))
 @router.get('/{id}', status_code = status.HTTP_200_OK)
 def show(id: int, db: Session = Depends(get_db)):
     return mahasiswa_irs.show(id, db)
+
+@router.get('/get_by_id_mhs/{id}', status_code = status.HTTP_200_OK)
+def get_by_id_mhs(id: int, db: Session = Depends(get_db)):
+    return mahasiswa_irs.get_by_id_mhs(id, db)
