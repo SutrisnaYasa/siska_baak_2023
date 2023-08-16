@@ -220,7 +220,7 @@ def get_by_id_mhs_thn_ajar(id: int, id_tahun_ajar: int, db: Session) -> Dict[str
             content = content,
             media_type = "application/json",
             status_code = status.HTTP_404_NOT_FOUND,
-            headers = {"X-Error": "Data Nilai IRS Mahasiswa"}
+            headers = {"X-Error": "Data Nilai IRS Mahasiswa tidak ditemukan"}
         )
     try:
         response["status"] = True
