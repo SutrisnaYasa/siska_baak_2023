@@ -206,15 +206,15 @@ def get_by_id_mhs_thn_ajar(id: int, id_tahun_ajar: int, db: Session) -> Dict[str
         modelsMahasiswa,
         modelsMahasiswaIrs.id_mahasiswa == modelsMahasiswa.id_mahasiswa
     ).join(
-        modelsDosenMengajar,  # Add this join
+        modelsDosenMengajar,  # Join dengan tabel dosen mengajar
         modelsMahasiswaIrs.id_dosen_mengajar == modelsDosenMengajar.id
     ).filter(
         modelsMahasiswa.id_mahasiswa == id,
         modelsMahasiswaIrsNilai.deleted_at.is_(None),
-        modelsDosenMengajar.id_tahun_ajar == id_tahun_ajar  # Add this filter
+        modelsDosenMengajar.id_tahun_ajar == id_tahun_ajar  # Filter untuk tahun ajaran
     ).all()
     if not mhs_nilai_by_id_thn_ajar:
-        response["msg"] = f"Data Nilai IRS Mahasiswa dengan id Mahasiswa {id} tidak temukan"
+        response["msg"] = f"Data Nilai IRS Mahasiswa dengan id Mahasiswa {id} dan Tahun Ajaran {id_tahun_ajar} tidak ditemukan"
         content = json.dumps({"detail":[response]})
         return Response(
             content = content,

@@ -305,3 +305,31 @@ def get_by_id_mhs(id: int, db: Session) -> Dict[str, Union[bool, str, schemasSho
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
+
+def get_by_id_mhs_thn_ajar(id: int, id_tahun_ajar: int, db: Session) -> Dict[str, Union[bool, str, schemasShowMahasiswaIrs]]:
+    response = {"status": False, "msg": "", "data": None}
+    mhs_irs_by_thn_ajar = db.query(
+        modelsMahasiswaIrs
+    ).join(
+        modelsDosenMengajar,
+        modelsMahasiswaIrs.id_dosen_mengajar == modelsDosenMengajar.id
+    ).filter(
+        modelsMahasiswaIrs.id_mahasiswa == id,
+        modelsDosenMengajar.id_tahun_ajar == id_tahun_ajar
+    ).all()
+    if not mhs_irs_by_thn_ajar:
+        response["msg"] = f"Data IRS Mahasiswa dengan id Mahasiswa {id} dan Tahun Ajaran {id_tahun_ajar} tidak ditemukan"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data IRS Mahasiswa tidak ditemukan"}
+        )
+    try:
+        response["status"] = True
+        response["msg"] = "Data IRS Mahasiswa Berhasil Ditemukan"
+        response["data"] = [schemasShowMahasiswaIrs.from_orm(mhs_irs) for mhs_irs in mhs_irs_by_thn_ajar]
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
