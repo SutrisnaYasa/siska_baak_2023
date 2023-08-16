@@ -191,3 +191,31 @@ def show(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMen
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
+
+def get_by_id_dosen_mengajar(id: int, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMengajarJadwalUjian]]:
+    response = {"status": False, "msg": "", "data": None}
+    query_by_id_dosen = db.query(
+        modelsDosenMengajarJadwalUjian
+    ).join(
+        modelsDosenMengajar,
+        modelsDosenMengajarJadwalUjian.id_dosen_mengajar == modelsDosenMengajar.id
+    ).filter(
+        modelsDosenMengajar.id == id,
+        modelsDosenMengajarJadwalUjian.deleted_at.is_(None)
+    ).all()
+    if not query_by_id_dosen:
+        response["msg"] = f"Data Jadwal Mengajar Dosen dengan id dosen mengajar {id} tidak ditemukan"
+        content = json.dumps({"detail":[response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data Jadwal Mengajar Dosen tidak ditemukan"}
+        )
+    try:
+        response["status"] = True
+        response["msg"] = "Data Jadwal Mengajar Dosen Berhasil Ditemukan"
+        response["data"] = [schemasShowDosenMengajarJadwalUjian.from_orm(jadwal_mengajar_dosen) for jadwal_mengajar_dosen in query_by_id_dosen]
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
