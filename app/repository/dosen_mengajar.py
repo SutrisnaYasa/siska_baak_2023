@@ -281,3 +281,32 @@ def get_by_id_dosen(id: int, db: Session) -> Dict[str, Union[bool, str, schemasS
     except Exception as e:
         response["msg"] = str(e)
     return {"detail": [response]}
+
+def get_by_id_dosen_thn_ajar(id: int, id_tahun_ajar: int, db: Session) -> Dict[str, Union[bool, str, schemasShowDosenMengajar]]:
+    response = {"status": False, "msg": "", "data": None}
+    dosen_thn_ajar = db.query(
+        modelsDosenMengajar
+    ).join(
+        modelsDosen,
+        modelsDosenMengajar.id_dosen == modelsDosen.id_dosen
+    ).filter(
+        modelsDosen.id_dosen == id,
+        modelsDosenMengajar.deleted_at.is_(None),
+        modelsDosenMengajar.id_tahun_ajar == id_tahun_ajar
+    ).all()
+    if not dosen_thn_ajar:
+        response["msg"] = f"Data Mengajar Dosen dengan id Dosen {id} dan id Tahun Ajaran {id_tahun_ajar} tidak ditemukan"
+        content = json.dumps({"detail": [response]})
+        return Response(
+            content = content,
+            media_type = "application/json",
+            status_code = status.HTTP_404_NOT_FOUND,
+            headers = {"X-Error": "Data Mengajar Dosen tidak ditemukan"}
+        )
+    try:
+        response["status"] = True
+        response["msg"] = "Data Mengajar Dosen Berhasil Ditemukan"
+        response["data"] = [schemasShowDosenMengajar.from_orm(dosen) for dosen in dosen_thn_ajar]
+    except Exception as e:
+        response["msg"] = str(e)
+    return {"detail": [response]}
